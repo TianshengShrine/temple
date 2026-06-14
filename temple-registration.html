@@ -385,15 +385,20 @@ function saveRecords(r){localStorage.setItem('t_recs',JSON.stringify(r))}
 async function cloudLoad(){
   try{
     showSyncStatus('⏳ 載入雲端資料…');
-    const res=await fetch(GAS_URL+'?t='+Date.now());
-    const data=await res.json();
+    const res=await fetch(GAS_URL+'?t='+Date.now(),{
+      redirect:'follow'
+    });
+    const text=await res.text();
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(pe){ showSyncStatus('⚠ 回應格式錯誤：'+text.slice(0,80)); return; }
     if(data.ok){
       saveRecords(data.records||[]);
       _cloudLoaded=true;
       showSyncStatus('✅ 雲端同步完成（'+(data.records||[]).length+'筆）');
       renderRecords();
     } else {
-      showSyncStatus('⚠ 載入失敗：'+data.error);
+      showSyncStatus('⚠ 載入失敗：'+(data.error||'未知錯誤'));
     }
   }catch(e){
     showSyncStatus('⚠ 網路錯誤：'+e.message);
@@ -405,13 +410,17 @@ async function cloudSave(records){
     showSyncStatus('⏳ 儲存至雲端…');
     const res=await fetch(GAS_URL,{
       method:'POST',
+      redirect:'follow',
       body:JSON.stringify({action:'save',records})
     });
-    const data=await res.json();
+    const text=await res.text();
+    let data;
+    try{ data=JSON.parse(text); }
+    catch(pe){ showSyncStatus('⚠ 回應格式錯誤'); return; }
     if(data.ok){
       showSyncStatus('✅ 已儲存至雲端');
     }else{
-      showSyncStatus('⚠ 儲存失敗：'+data.error);
+      showSyncStatus('⚠ 儲存失敗：'+(data.error||'未知錯誤'));
     }
   }catch(e){
     showSyncStatus('⚠ 網路錯誤：'+e.message);
@@ -804,7 +813,7 @@ function submitAll(){
   const acts=getActs();
   let recs=getRecords();
   recs.sort((a,b)=>{
-    const an=parseInt((a.id||'').replace(/\D/g,'')), bn=parseInt((b.id||'').replace(/\D/g,''));
+    const an=parseInt(String(a.id||'').replace(/\D/g,'')), bn=parseInt(String(b.id||'').replace(/\D/g,''));
     if(!isNaN(an)&&!isNaN(bn)) return an-bn;
     return (a.id||'').localeCompare(b.id||'','zh-TW');
   });
@@ -877,7 +886,7 @@ function renderRecords(){
   });
   // 依編號排序（數字優先，非數字字串按字母）
   recs.sort((a,b)=>{
-    const aid=a.id||'', bid2=b.id||'';
+    const aid=String(a.id||''), bid2=String(b.id||'');
     const an=parseInt(aid.replace(/\D/g,'')), bn=parseInt(bid2.replace(/\D/g,''));
     if(!isNaN(an)&&!isNaN(bn)) return an-bn;
     return aid.localeCompare(bid2,'zh-TW');
@@ -970,7 +979,7 @@ function exportCSV(){
 
 function _doExport(recs){
   recs=[...recs].sort((a,b)=>{
-    const an=parseInt((a.id||'').replace(/[^0-9]/g,'')),bn=parseInt((b.id||'').replace(/[^0-9]/g,''));
+    const an=parseInt(String(a.id||'').replace(/[^0-9]/g,'')),bn=parseInt(String(b.id||'').replace(/[^0-9]/g,''));
     if(!isNaN(an)&&!isNaN(bn)) return an-bn;
     return (a.id||'').localeCompare(b.id||'','zh-TW');
   });
@@ -1123,6 +1132,7 @@ function _doExport(recs){
   } catch(err) {
     showToast('匯出錯誤：'+err.message);
     console.error('Export error:', err);
+    alert('Excel 匯出失敗：'+err.message+'\n請截圖此訊息回報。');
   }
 }
 
