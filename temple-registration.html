@@ -195,7 +195,7 @@ textarea{resize:vertical;min-height:60px}
     <div id="sync-status" style="font-size:12px;color:var(--smoke);margin-bottom:8px;min-height:18px;letter-spacing:.5px"></div>
     <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <input type="text" id="rec-q" placeholder="搜尋姓名…" style="flex:1;min-width:120px" oninput="renderRecords()">
-      <input type="text" id="rec-staff-q" placeholder="搜尋服務人員…" style="flex:1;min-width:120px" oninput="renderRecords()">
+      <select id="rec-staff-select" onchange="renderRecords()" style="border:1px solid var(--parchment-dark);border-radius:4px;padding:8px 10px;font-size:13px;min-width:130px"><option value="">全部服務人員</option></select>
       <input type="text" id="rec-family-q" placeholder="搜尋家庭編號…" style="width:130px" oninput="renderRecords()">
       <select id="rec-delivery-filter" onchange="renderRecords()" style="border:1px solid var(--parchment-dark);border-radius:4px;padding:8px 10px;font-size:13px">
         <option value="">全部寄送方式</option>
@@ -532,9 +532,21 @@ async function cloudLoad(){
     try{ data=JSON.parse(text); }
     catch(pe){ showSyncStatus('⚠ 回應格式錯誤：'+text.slice(0,80)); return; }
     if(data.ok){
-      saveRecords(data.records||[]);
+      // 重新計算金額
+      const acts2=getActs();
+      const fixedRecs=(data.records||[]).map(r=>{
+        const total=( r.activities||[] ).reduce((s,an,i)=>{
+          const a=acts2.find(x=>x.name===an);
+          if(!a) return s;
+          const di=(r.douInfo||[])[i]||an;
+          const qm=String(di).match(/x([0-9]+)斗/);
+          return s+a.price*(qm?parseInt(qm[1]):1);
+        },0);
+        return Object.assign({},r,{total});
+      });
+      saveRecords(fixedRecs);
       _cloudLoaded=true;
-      showSyncStatus('✅ 雲端同步完成（'+(data.records||[]).length+'筆）');
+      showSyncStatus('✅ 雲端同步完成（'+fixedRecs.length+'筆）');
       renderRecords();
     } else {
       showSyncStatus('⚠ 載入失敗：'+(data.error||'未知錯誤'));
@@ -1164,7 +1176,17 @@ function clearAll(){
 // ======== RECORDS ========
 function renderRecords(){
   const q=(document.getElementById('rec-q')?.value||'').toLowerCase();
-  const sq=(document.getElementById('rec-staff-q')?.value||'').toLowerCase();
+  const staffSel=document.getElementById('rec-staff-select');
+  // Populate staff select
+  if(staffSel && staffSel.options.length<=1){
+    const allStaff=[...new Set(getRecords().map(r=>r.staffName||'').filter(Boolean))].sort();
+    allStaff.forEach(s=>{
+      if([...staffSel.options].every(o=>o.value!==s)){
+        const opt=document.createElement('option'); opt.value=s; opt.textContent=s; staffSel.appendChild(opt);
+      }
+    });
+  }
+  const sq=staffSel?.value||'';
   const fq=(document.getElementById('rec-family-q')?.value||'').toLowerCase();
   const dq=document.getElementById('rec-delivery-filter')?.value||'';
   let recs=getRecords().filter(r=>{
