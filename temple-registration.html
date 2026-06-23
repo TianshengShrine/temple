@@ -1169,7 +1169,7 @@ function renderRecords(){
   const dq=document.getElementById('rec-delivery-filter')?.value||'';
   let recs=getRecords().filter(r=>{
     if(q && !r.name.toLowerCase().includes(q)) return false;
-    if(sq && !(r.staffName||'').toLowerCase().includes(sq)) return false;
+    if(sq && (r.staffName||'')!==sq) return false;
     if(fq && !(r.familyNo||'').toLowerCase().includes(fq)) return false;
     if(dq && (r.delivery||'自取')!==dq) return false;
     return true;
