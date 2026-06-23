@@ -98,7 +98,7 @@ textarea{resize:vertical;min-height:60px}
 /* RECORDS */
 .records-table{width:100%;border-collapse:collapse;font-size:12px}
 .records-table th{background:var(--red-deep);color:var(--gold-light);padding:9px 10px;text-align:left;font-weight:600;letter-spacing:1px;font-size:12px}
-.records-table td{padding:9px 10px;border-bottom:1px solid var(--parchment-dark);vertical-align:middle}
+.records-table td{padding:7px 8px;border-bottom:1px solid var(--parchment-dark);vertical-align:middle;word-break:keep-all}
 .records-table tr:hover td{background:rgba(201,146,42,.04)}
 .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;margin:1px}
 .badge-red{background:rgba(139,26,26,.1);color:var(--crimson)}
@@ -1176,7 +1176,7 @@ function renderRecords(){
     <td>${r.zodiac||''}</td>
     <td style="font-size:11px;max-width:90px;overflow:hidden;text-overflow:ellipsis">${r.address||''}</td>
     <td style="font-size:11px;white-space:nowrap">${r.bazi||''}</td>
-    <td style="max-width:200px"><div style="display:flex;flex-wrap:wrap;gap:3px">${(r.douInfo||r.activities||[]).map(a=>`<span class="badge badge-red">${a}</span>`).join('')}</div></td>
+    <td style="max-width:220px;min-width:120px"><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">${(r.douInfo||r.activities||[]).map(a=>`<span class="badge badge-red" style="white-space:nowrap;font-size:11px">${a}</span>`).join('')}</div></td>
     <td style="color:var(--crimson);font-weight:600">$${(r.total||0).toLocaleString()}</td>
     <td><span class="badge" style="background:${
       {'葉宏乘':'rgba(0,112,192,.15)','陳朋侑':'rgba(0,176,80,.15)','蔡安俐':'rgba(255,146,208,.3)',
