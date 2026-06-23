@@ -101,7 +101,7 @@ textarea{resize:vertical;min-height:60px}
 .records-table td{padding:7px 8px;border-bottom:1px solid var(--parchment-dark);vertical-align:middle;word-break:keep-all}
 .records-table tr:hover td{background:rgba(201,146,42,.04)}
 .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;margin:1px}
-.badge-red{background:rgba(139,26,26,.1);color:var(--crimson)}
+.badge-red{background:rgba(139,26,26,.1);color:var(--crimson);white-space:nowrap}
 .badge-gold{background:rgba(201,146,42,.15);color:#7A5010}
 .badge-blue{background:rgba(26,74,139,.1);color:var(--blue)}
 .badge-green{background:rgba(45,122,58,.1);color:#2D7A3A}
@@ -1093,7 +1093,18 @@ function submitAll(){
       if(!m.name.trim()) return; // skip empty
       const id=m.bno&&m.bno.trim() ? m.bno.trim() : (batchId+'-'+String(fi+1)+String(f.members.indexOf(m)+1).padStart(2,'0'));
       const actNames=m.actIds.map(aid=>{const a=acts.find(x=>x.id===aid);return a?a.name:'';}).filter(Boolean);
-      const total=m.actIds.reduce((s,aid)=>{const a=acts.find(x=>x.id===aid);return s+(a?a.price:0);},0);
+      // 斗數資訊
+      const douInfo=actNames.map(an=>{
+        const act=acts.find(x=>x.name===an);
+        if(!act) return an;
+        const qty=(m.douMap||{})[act.id]||1;
+        return qty>1 ? `${an} x${qty}斗` : an;
+      });
+      const total=m.actIds.reduce((s,aid)=>{
+        const a=acts.find(x=>x.id===aid);
+        const qty=(m.douMap||{})[aid]||1;
+        return s+(a?a.price*qty:0);
+      },0);
       batchTotal+=total;
       recs.push({
         id, familyNo, batchId,
@@ -1109,6 +1120,7 @@ function submitAll(){
         bazi:`${rocToGanzhi(m.byear)}${lunarMonthStr(m.bmonth)}${lunarDayStr(m.bday)}日${(m.bhour||'').split('(')[0].trim()}`,
         cal:m.cal,
         activities:actNames,
+        douInfo,
         total,
         notes:document.getElementById('f-notes').value,
         createdAt:now
@@ -1176,7 +1188,11 @@ function renderRecords(){
     <td>${r.zodiac||''}</td>
     <td style="font-size:11px;max-width:90px;overflow:hidden;text-overflow:ellipsis">${r.address||''}</td>
     <td style="font-size:11px;white-space:nowrap">${r.bazi||''}</td>
-    <td style="max-width:220px;min-width:120px"><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">${(r.douInfo||r.activities||[]).map(a=>`<span class="badge badge-red" style="white-space:nowrap;font-size:11px">${a}</span>`).join('')}</div></td>
+    <td><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:flex-start;min-width:180px;max-width:260px">${(r.douInfo||r.activities||[]).map(a=>{
+      const match=a.match(/^(.+?) x(\d+)斗$/);
+      if(match) return `<span class="badge badge-red">${match[1]}<strong style="color:var(--crimson);margin-left:2px">x${match[2]}</strong></span>`;
+      return `<span class="badge badge-red">${a}</span>`;
+    }).join('')}</div></td>
     <td style="color:var(--crimson);font-weight:600">$${(r.total||0).toLocaleString()}</td>
     <td><span class="badge" style="background:${
       {'葉宏乘':'rgba(0,112,192,.15)','陳朋侑':'rgba(0,176,80,.15)','蔡安俐':'rgba(255,146,208,.3)',
