@@ -843,7 +843,7 @@ function addBeliever(fid){
   if(!f) return;
   const bid='b'+(++belCount);
   f.members.push({bid,bno:'',name:'',gender:'',zodiac:'',age:'',address:'',phone:'',delivery:'自取',storeBrand:'',storeName:'',storeAddress:'',shippingAddress:'',
-    byear:'',bmonth:'',bday:'',bhour:'',cal:'農曆',actIds:[]});
+    byear:'',bmonth:'',bday:'',bhour:'',cal:'農曆',actIds:[],douMap:{}});
   renderFamilies();
 }
 
@@ -892,6 +892,11 @@ function toggleAct(fid,bid,aid,checked){
 
 function renderFamilies(){
   const acts=getActs();
+  // 確保所有已勾選活動的 douMap 都存在（防止 douMap 未初始化）
+  families.forEach(f=>f.members.forEach(m=>{
+    if(!m.douMap) m.douMap={};
+    m.actIds.forEach(aid=>{ if(!m.douMap[aid]) m.douMap[aid]=1; });
+  }));
   const fixedCols=7; // 固定欄位數：編號、姓名、性別、生肖、庚年、生辰八字、住所
   const container=document.getElementById('families-container');
   container.innerHTML=families.map((f,fi)=>{
