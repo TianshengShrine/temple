@@ -345,9 +345,15 @@ textarea{resize:vertical;min-height:60px}
       <label>寄件人電話</label>
       <input type="text" id="sender-phone">
     </div>
-    <div class="field" style="margin-bottom:18px">
+    <div class="field" style="margin-bottom:10px">
       <label>寄件人地址</label>
       <input type="text" id="sender-address">
+    </div>
+    <div class="field" style="margin-bottom:18px">
+      <label>📂 郵局範本檔案 <span class="req">*</span></label>
+      <input type="file" id="post-template-file" accept=".xlsx"
+        style="width:100%;padding:6px 0;font-size:13px;color:var(--ink)">
+      <div style="font-size:11px;color:var(--smoke);margin-top:4px">請選取郵局提供的「國內包裹批次建立上傳檔」xlsx</div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button onclick="closeSenderModal()" style="background:transparent;border:1px solid var(--parchment-dark);border-radius:4px;padding:9px 20px;cursor:pointer;font-size:13px;color:var(--smoke)">取消</button>
@@ -1435,111 +1441,107 @@ function confirmExportPostOffice(){
   const senderName=document.getElementById('sender-name').value.trim();
   const senderPhone=document.getElementById('sender-phone').value.trim();
   const senderAddress=document.getElementById('sender-address').value.trim();
+  const templateFile=document.getElementById('post-template-file').files[0];
 
   if(!senderName){showToast('⚠ 請填寫寄件人姓名');return}
+  if(!templateFile){showToast('⚠ 請選取郵局範本檔案');return}
 
   // 寄件人電話保留開頭0
   const spRaw=senderPhone.replace(/[^0-9]/g,'');
   const spFull=spRaw.startsWith('0')?spRaw:'0'+spRaw;
 
-  // 產生符合郵局「託運清單(整段地址)」格式的xlsx
-  // 欄位對應（共30欄）：
-  // A=編號 B=收件人姓名 C=收件人電話 D=寄達地址類型 E=收件地址(整段)
-  // F,G,H=空(合併欄) I=寄件人合約編號 J=寄件人姓名 K=寄件人電話
-  // L=寄件人地址(整段) M,N=空 O=寄件人email
-  // P=內裝物品種類 Q=內裝物品描述 R=總重量 S=包材 T=包裹總長
-  // U=報值金額 V=未送達處理方式 W=內裝物品代碼 X=內裝物 Y=未送達處理方式代碼
-  // Z=郵件寄達地址類型 AA=收件人郵遞區號 AB=寄件人郵遞區號 AC=自備箱袋 AD=郵件種類
-
-  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s;n=Math.floor((n-1)/26);}return s;}
-  function cell(val,row,col){
-    const addr=colLetter(col)+row;
-    const v=String(val||'');
-    if(!v.trim()) return `<c r="${addr}"/>`;
-    const num=Number(v);
-    if(!isNaN(num)&&v.trim()!=='') return `<c r="${addr}" t="n"><v>${num}</v></c>`;
-    return `<c r="${addr}" t="inlineStr"><is><t>${esc(v)}</t></is></c>`;
-  }
-  function cellStr(val,row,col){
-    const addr=colLetter(col)+row;
-    const v=String(val||'');
-    if(!v.trim()) return `<c r="${addr}"/>`;
-    return `<c r="${addr}" t="inlineStr"><is><t>${esc(v)}</t></is></c>`;
-  }
-
-  // 產生資料列（從第5列開始，對應郵局範本第4列是欄位標題）
-  const dataRows=recs.map((r,i)=>{
-    const rowNum=i+5;
-    const addr=r.shippingAddress||r.address||'';
-    let rr=`<row r="${rowNum}">`;
-    // A=編號（空，系統自動填入）
-    rr+=`<c r="A${rowNum}"/>`;
-    // B=收件人姓名
-    rr+=cellStr(r.name||'',rowNum,2);
-    // C=收件人電話
-    rr+=cellStr(r.phone||'',rowNum,3);
-    // D=寄達地址類型
-    rr+=cellStr('一般地址',rowNum,4);
-    // E=收件地址（整段）
-    rr+=cellStr(addr,rowNum,5);
-    // F,G,H=空
-    // I=寄件人合約編號（空）
-    // J=寄件人姓名
-    rr+=cellStr(senderName,rowNum,10);
-    // K=寄件人電話
-    rr+=cellStr(spFull,rowNum,11);
-    // L=寄件人地址
-    rr+=cellStr(senderAddress,rowNum,12);
-    // O=寄件人email（空）
-    // P=內裝物品種類
-    rr+=cellStr('禮品',rowNum,16);
-    // Q=內裝物品描述（空）
-    // R=總重量
-    rr+=cell('6',rowNum,18);
-    // S=包材
-    rr+=cellStr('51.首次_bag1_一般便利袋:31×23×3(cm)',rowNum,19);
-    // T=包裹總長
-    rr+=cell('57',rowNum,20);
-    // U=報值金額（空）
-    // V=未送達處理方式
-    rr+=cellStr('退回寄件人(另付退回費)',rowNum,22);
-    // W=內裝物品代碼
-    rr+=cellStr('B',rowNum,23);
-    // X=內裝物
-    rr+=cellStr('其他',rowNum,24);
-    // Y=未送達處理方式代碼
-    rr+=cell('1',rowNum,25);
-    // Z=郵件寄達地址類型
-    rr+=cell('310',rowNum,26);
-    // AA=收件人郵遞區號（空）
-    // AB=寄件人郵遞區號（空）
-    // AC=自備箱袋
-    rr+=cellStr('001',rowNum,29);
-    // AD=郵件種類
-    rr+=cellStr('001',rowNum,30);
-    rr+=`</row>`;
-    return rr;
-  });
-
-  const sheetXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<sheetData>${dataRows.join('')}</sheetData>
-</worksheet>`;
-
-  // 最簡單的xlsx結構（單工作表，名稱符合郵局要求的「託運清單(整段地址)」）
-  const sheetName='託運清單(整段地址)';
-  const files={
-    '[Content_Types].xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`,
-    '_rels/.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
-    'xl/workbook.xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${sheetName}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
-    'xl/_rels/workbook.xml.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
-    'xl/worksheets/sheet1.xml':sheetXml
+  // 讀取範本xlsx，填入資料後下載
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      const ab=e.target.result;
+      const bytes=new Uint8Array(ab);
+      await _fillPostTemplate(bytes, recs, senderName, spFull, senderAddress, templateFile.name);
+    }catch(err){
+      showToast('⚠ 讀取範本失敗：'+err.message);
+      console.error(err);
+    }
   };
-  _buildZip(files,'郵局批次寄件_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.xlsx');
-
+  reader.readAsArrayBuffer(templateFile);
   closeSenderModal();
-  showToast('✦ 郵局格式已匯出（'+recs.length+'筆），請至 post.gov.tw 上傳');
+  showToast('⏳ 正在填入資料…');
+}
+
+async function _fillPostTemplate(templateBytes, recs, senderName, senderPhone, senderAddress, origFilename){
+  try{
+    // 解析zip結構
+    const files=await _unzipAsync(templateBytes);
+    if(!files){showToast('⚠ 無法解析範本檔案');return}
+
+    // 找workbook.xml確認sheet關係
+    const wbXml=_xmlStr(files['xl/workbook.xml']);
+    // 找「託運清單(整段地址)」對應的sheet檔案
+    const wbRels=_xmlStr(files['xl/_rels/workbook.xml.rels']);
+
+    // 從workbook.xml找sheet name和rId
+    const sheetMatch=[...wbXml.matchAll(/<sheet[^>]+name="([^"]*整段地址[^"]*)"[^>]+r:id="([^"]+)"/g)];
+    if(!sheetMatch.length){showToast('⚠ 找不到「託運清單(整段地址)」工作表');return}
+    const sheetRId=sheetMatch[0][2];
+
+    // 從rels找對應檔案路徑
+    const relMatch=wbRels.match(new RegExp('Id="'+sheetRId+'"[^>]+Target="([^"]+)"'));
+    if(!relMatch){showToast('⚠ 找不到工作表檔案路徑');return}
+    const sheetPath='xl/'+relMatch[1];
+
+    // 解析工作表xml
+    let sheetXml=_xmlStr(files[sheetPath]);
+
+    // 產生新的資料列（第5列起）
+    function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s;n=Math.floor((n-1)/26);}return s;}
+    function cellN(v,r,c){return `<c r="${colLetter(c)+r}" t="n"><v>${v}</v></c>`;}
+    function cellS(v,r,c){
+      if(!String(v||'').trim()) return `<c r="${colLetter(c)+r}"/>`;
+      return `<c r="${colLetter(c)+r}" t="inlineStr"><is><t>${esc(v)}</t></is></c>`;
+    }
+
+    const newRows=recs.map((r,i)=>{
+      const row=5+i;
+      const addr=r.shippingAddress||r.address||'';
+      return `<row r="${row}">`+
+        cellS('',row,1)+        // A 編號（空）
+        cellS(r.name,row,2)+    // B 收件人姓名
+        cellS(r.phone,row,3)+   // C 收件人電話
+        cellS('一般地址',row,4)+ // D 寄達地址類型
+        cellS(addr,row,5)+      // E 收件地址
+        cellS(senderName,row,10)+  // J 寄件人姓名
+        cellS(senderPhone,row,11)+ // K 寄件人電話
+        cellS(senderAddress,row,12)+ // L 寄件人地址
+        cellS('禮品',row,16)+   // P 內裝物品種類
+        cellN(6,row,18)+        // R 總重量
+        cellS('51.首次_bag1_一般便利袋:31×23×3(cm)',row,19)+ // S 包材
+        cellN(57,row,20)+       // T 包裹總長
+        cellS('退回寄件人(另付退回費)',row,22)+ // V 未送達處理方式
+        cellS('B',row,23)+      // W 內裝物品代碼
+        cellS('其他',row,24)+   // X 內裝物
+        cellN(1,row,25)+        // Y 未送達處理方式代碼
+        cellN(310,row,26)+      // Z 郵件寄達地址類型
+        cellS('001',row,29)+    // AC 自備箱袋
+        cellS('001',row,30)+    // AD 郵件種類
+        `</row>`;
+    }).join('');
+
+    // 把新資料列插入sheetData（保留第1~4列，清除第5列以後的舊資料）
+    sheetXml=sheetXml.replace(/<sheetData>([\s\S]*?)<\/sheetData>/, (match, inner)=>{
+      // 保留第1~4列
+      const kept=[...inner.matchAll(/<row r="([1-4])"[\s\S]*?<\/row>/g)].map(m=>m[0]).join('');
+      return `<sheetData>${kept}${newRows}</sheetData>`;
+    });
+
+    // 重新打包
+    files[sheetPath]=new TextEncoder().encode(sheetXml);
+    const fname=origFilename.replace(/\.xlsx$/i,'')+'_已填入_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.xlsx';
+    _rebuildZip(files, fname);
+    showToast('✦ 郵局格式已匯出（'+recs.length+'筆）');
+  }catch(err){
+    alert('填入範本失敗：'+err.message+'\n'+err.stack);
+    showToast('⚠ 匯出失敗');
+  }
 }
 
 function exportCSV(){
@@ -1769,6 +1771,137 @@ function _buildZip(files, filename){
     console.error('ZIP error:', err2);
   }
 }
+
+// ── Uint8Array → string ──
+function _xmlStr(bytes){
+  if(!bytes) return '';
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+// ── 解壓縮 xlsx（zip格式）→ {path: Uint8Array} ──
+function _unzip(bytes){
+  const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const files={};
+  let i=0;
+  while(i<bytes.length-4){
+    if(view.getUint32(i,true)!==0x04034B50){i++;continue;}
+    const fnLen=view.getUint16(i+26,true);
+    const extLen=view.getUint16(i+28,true);
+    const compSize=view.getUint32(i+18,true);
+    const uncomp=view.getUint32(i+22,true);
+    const method=view.getUint16(i+8,true);
+    const fn=new TextDecoder().decode(bytes.slice(i+30,i+30+fnLen));
+    const dataStart=i+30+fnLen+extLen;
+    if(method===0){
+      // stored（未壓縮）
+      files[fn]=bytes.slice(dataStart,dataStart+compSize);
+    } else if(method===8){
+      // deflate
+      try{
+        const raw=bytes.slice(dataStart,dataStart+compSize);
+        files[fn]=_inflate(raw,uncomp);
+      }catch(e){
+        // 無法解壓縮的就跳過（圖片等二進位資源）
+      }
+    }
+    i=dataStart+compSize;
+  }
+  return Object.keys(files).length?files:null;
+}
+
+// ── inflate（deflate解壓縮）──
+function _inflate(data,expectedSize){
+  // 使用 DecompressionStream（現代瀏覽器支援）
+  // 同步包裝（用 TransformStream）
+  const ds=new DecompressionStream('deflate-raw');
+  const writer=ds.writable.getWriter();
+  const reader=ds.readable.getReader();
+  writer.write(data);
+  writer.close();
+  const chunks=[];
+  function pump(){
+    return reader.read().then(({done,value})=>{
+      if(done) return;
+      chunks.push(value);
+      return pump();
+    });
+  }
+  // 同步不可行，改用非同步包裝
+  throw new Error('_inflate需要非同步，請用_inflateAsync');
+}
+
+// ── 非同步解壓縮整個zip ──
+async function _unzipAsync(bytes){
+  const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const files={};
+  let i=0;
+  const decoder=new TextDecoder();
+  while(i<bytes.length-4){
+    if(view.getUint32(i,true)!==0x04034B50){i++;continue;}
+    const fnLen=view.getUint16(i+26,true);
+    const extLen=view.getUint16(i+28,true);
+    const compSize=view.getUint32(i+18,true);
+    const uncomp=view.getUint32(i+22,true);
+    const method=view.getUint16(i+8,true);
+    const fn=decoder.decode(bytes.slice(i+30,i+30+fnLen));
+    const dataStart=i+30+fnLen+extLen;
+    if(method===0){
+      files[fn]=bytes.slice(dataStart,dataStart+compSize);
+    } else if(method===8){
+      try{
+        const raw=bytes.slice(dataStart,dataStart+compSize);
+        const ds=new DecompressionStream('deflate-raw');
+        const w=ds.writable.getWriter();
+        w.write(raw); w.close();
+        const chunks=[];
+        const r=ds.readable.getReader();
+        while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);}
+        const total=chunks.reduce((s,c)=>s+c.length,0);
+        const out=new Uint8Array(total);
+        let off=0;
+        chunks.forEach(c=>{out.set(c,off);off+=c.length;});
+        files[fn]=out;
+      }catch(e){}
+    }
+    i=dataStart+compSize;
+  }
+  return Object.keys(files).length?files:null;
+}
+
+// ── 重新打包zip（支援Uint8Array內容）──
+function _rebuildZip(files, filename){
+  function crc32(b){
+    const t=new Uint32Array(256);
+    for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):c>>>1;t[i]=c;}
+    let c=0xFFFFFFFF;
+    for(let i=0;i<b.length;i++)c=t[(c^b[i])&0xFF]^(c>>>8);
+    return(c^0xFFFFFFFF)>>>0;
+  }
+  function u32(n){const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;}
+  function u16(n){const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;}
+  function cat(...a){const t=a.reduce((s,x)=>s+x.length,0),o=new Uint8Array(t);let p=0;for(const x of a){o.set(x,p);p+=x.length;}return o;}
+  function toBytes(v){return v instanceof Uint8Array?v:new TextEncoder().encode(String(v));}
+
+  const entries=[];let offset=0;
+  for(const [path,content] of Object.entries(files)){
+    const nb=new TextEncoder().encode(path);
+    const db=toBytes(content);
+    const crc=crc32(db),sz=db.length;
+    const lh=cat(new Uint8Array([0x50,0x4B,0x03,0x04]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(sz),u32(sz),u16(nb.length),u16(0),nb);
+    entries.push({nb,db,crc,sz,offset,lh});
+    offset+=lh.length+sz;
+  }
+  const cdParts=entries.map(e=>cat(new Uint8Array([0x50,0x4B,0x01,0x02]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(e.crc),u32(e.sz),u32(e.sz),u16(e.nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(e.offset),e.nb));
+  const cd=cat(...cdParts);
+  const eocd=cat(new Uint8Array([0x50,0x4B,0x05,0x06]),u16(0),u16(0),u16(entries.length),u16(entries.length),u32(cd.length),u32(offset),u16(0));
+  const zip=cat(...entries.flatMap(e=>[e.lh,e.db]),cd,eocd);
+  const blob=new Blob([zip],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  a.click();
+}
+
 
 
 function renderActEditor(){
