@@ -1461,8 +1461,8 @@ async function _doFillPostTemplate(recs,senderName,senderPhone,senderAddress){
     const files=await _unzipAsync(bytes);
     if(!files){showToast('⚠ 無法解析範本');return}
 
-    const wbXml=_xmlStr(files['xl/workbook.xml']);
-    const wbRels=_xmlStr(files['xl/_rels/workbook.xml.rels']);
+    const wbXml=_xmlStr((files['xl/workbook.xml']||{}).data||files['xl/workbook.xml']);
+    const wbRels=_xmlStr((files['xl/_rels/workbook.xml.rels']||{}).data||files['xl/_rels/workbook.xml.rels']);
 
     // 找「託運清單(整段地址)」的rId（不依賴屬性順序）
     let sheetRId='';
@@ -1498,8 +1498,9 @@ async function _doFillPostTemplate(recs,senderName,senderPhone,senderAddress){
     else if(sheetTarget.startsWith('xl/')) sheetPath=sheetTarget;
     else sheetPath='xl/'+sheetTarget;
 
-    let sheetXml=_xmlStr(files[sheetPath]);
-    if(!sheetXml){showToast('⚠ 找不到工作表內容：'+sheetPath);return}
+    const sheetEntry=files[sheetPath];
+    if(!sheetEntry){showToast('⚠ 找不到工作表內容：'+sheetPath);return}
+    let sheetXml=_xmlStr(sheetEntry.data||sheetEntry);
 
     function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s;n=Math.floor((n-1)/26);}return s;}
@@ -1566,7 +1567,7 @@ async function _doFillPostTemplate(recs,senderName,senderPhone,senderAddress){
       }
     });
 
-    files[sheetPath]=new TextEncoder().encode(sheetXml);
+    files[sheetPath]=new TextEncoder().encode(sheetXml); // 修改後的xml，stored方式存
     _rebuildZip(files,'郵局批次寄件_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.xlsx');
     showToast('✦ 郵局格式已匯出（'+recs.length+'筆）');
   }catch(err){
@@ -1961,6 +1962,7 @@ function _inflate(data,expectedSize){
 
 // ── 非同步解壓縮整個zip ──
 async function _unzipAsync(bytes){
+  // 回傳 {filename: {data: Uint8Array(解壓), raw: Uint8Array(原始壓縮), method, crc, compSize, uncompSize}}
   const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
   const files={};
   let i=0;
@@ -1970,18 +1972,19 @@ async function _unzipAsync(bytes){
     const fnLen=view.getUint16(i+26,true);
     const extLen=view.getUint16(i+28,true);
     const compSize=view.getUint32(i+18,true);
-    const uncomp=view.getUint32(i+22,true);
+    const uncompSize=view.getUint32(i+22,true);
     const method=view.getUint16(i+8,true);
+    const crc=view.getUint32(i+14,true);
     const fn=decoder.decode(bytes.slice(i+30,i+30+fnLen));
     const dataStart=i+30+fnLen+extLen;
+    const rawData=bytes.slice(dataStart,dataStart+compSize);
     if(method===0){
-      files[fn]=bytes.slice(dataStart,dataStart+compSize);
+      files[fn]={data:rawData,raw:rawData,method:0,crc,compSize,uncompSize};
     } else if(method===8){
       try{
-        const raw=bytes.slice(dataStart,dataStart+compSize);
         const ds=new DecompressionStream('deflate-raw');
         const w=ds.writable.getWriter();
-        w.write(raw); w.close();
+        w.write(rawData); w.close();
         const chunks=[];
         const r=ds.readable.getReader();
         while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);}
@@ -1989,8 +1992,10 @@ async function _unzipAsync(bytes){
         const out=new Uint8Array(total);
         let off=0;
         chunks.forEach(c=>{out.set(c,off);off+=c.length;});
-        files[fn]=out;
-      }catch(e){}
+        files[fn]={data:out,raw:rawData,method:8,crc,compSize,uncompSize};
+      }catch(e){
+        files[fn]={data:rawData,raw:rawData,method:0,crc:0,compSize,uncompSize};
+      }
     }
     i=dataStart+compSize;
   }
@@ -1999,6 +2004,7 @@ async function _unzipAsync(bytes){
 
 // ── 重新打包zip（支援Uint8Array內容）──
 function _rebuildZip(files, filename){
+  // files 可能是 {path: Uint8Array} 或 {path: {data,raw,method,crc,compSize,uncompSize}}
   function crc32(b){
     const t=new Uint32Array(256);
     for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):c>>>1;t[i]=c;}
@@ -2012,15 +2018,30 @@ function _rebuildZip(files, filename){
   function toBytes(v){return v instanceof Uint8Array?v:new TextEncoder().encode(String(v));}
 
   const entries=[];let offset=0;
-  for(const [path,content] of Object.entries(files)){
+  for(const [path,val] of Object.entries(files)){
     const nb=new TextEncoder().encode(path);
-    const db=toBytes(content);
-    const crc=crc32(db),sz=db.length;
-    const lh=cat(new Uint8Array([0x50,0x4B,0x03,0x04]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(sz),u32(sz),u16(nb.length),u16(0),nb);
-    entries.push({nb,db,crc,sz,offset,lh});
+    let db,crc,sz,method,uncompSz;
+    if(val && typeof val==='object' && val.raw instanceof Uint8Array){
+      // 來自_unzipAsync：用原始壓縮資料，保留原本壓縮方式
+      db=val.raw;
+      crc=val.crc;
+      sz=val.compSize;
+      uncompSz=val.uncompSize;
+      method=val.method;
+    } else {
+      // 新產生的內容（修改過的xml）：用stored方式
+      const plain=toBytes(val);
+      db=plain;
+      crc=crc32(plain);
+      sz=plain.length;
+      uncompSz=plain.length;
+      method=0;
+    }
+    const lh=cat(new Uint8Array([0x50,0x4B,0x03,0x04]),u16(20),u16(0),u16(method),u16(0),u16(0),u32(crc),u32(sz),u32(uncompSz),u16(nb.length),u16(0),nb);
+    entries.push({nb,db,crc,sz,uncompSz,method,offset,lh});
     offset+=lh.length+sz;
   }
-  const cdParts=entries.map(e=>cat(new Uint8Array([0x50,0x4B,0x01,0x02]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(e.crc),u32(e.sz),u32(e.sz),u16(e.nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(e.offset),e.nb));
+  const cdParts=entries.map(e=>cat(new Uint8Array([0x50,0x4B,0x01,0x02]),u16(20),u16(20),u16(0),u16(e.method),u16(0),u16(0),u32(e.crc),u32(e.sz),u32(e.uncompSz),u16(e.nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(e.offset),e.nb));
   const cd=cat(...cdParts);
   const eocd=cat(new Uint8Array([0x50,0x4B,0x05,0x06]),u16(0),u16(0),u16(entries.length),u16(entries.length),u32(cd.length),u32(offset),u16(0));
   const zip=cat(...entries.flatMap(e=>[e.lh,e.db]),cd,eocd);
