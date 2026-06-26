@@ -1438,31 +1438,105 @@ function confirmExportPostOffice(){
 
   if(!senderName){showToast('⚠ 請填寫寄件人姓名');return}
 
-  const hdr=['編號','收件人姓名','收件人電話','寄達地址類型','收件地址',
-    '寄件人合約編號','寄件人姓名','寄件人電話','寄件人地址','寄件人電子郵件信箱',
-    '內裝物品種類','內裝物品描述','總重量(kg)','包材','包裹總長(cm)',
-    '報值金額','未送達處理方式','內裝物品代碼','內裝物','未送達處理方式代碼',
-    '郵件寄達地址類型','收件人郵遞區號','寄件人郵遞區號','自備箱袋或選用便利箱','郵件種類'];
+  // 寄件人電話保留開頭0
+  const spRaw=senderPhone.replace(/[^0-9]/g,'');
+  const spFull=spRaw.startsWith('0')?spRaw:'0'+spRaw;
 
-  const rows=recs.map((r,i)=>{
-    // 寄件人電話保留開頭0
-    const spRaw=senderPhone.replace(/[^0-9]/g,'');
-    const spFull=spRaw.startsWith('0')?spRaw:'0'+spRaw;
-    return [
-      i+1, r.name||'', r.phone||'', '一般地址', (r.shippingAddress||r.address||''),
-      '', senderName, spFull, senderAddress, '',
-      '禮品', '', '6', '51.首次_bag1_一般便利袋:31×23×3(cm)', '57',
-      '', '退回寄件人(另付退回費)', 'B', '其他', '1',
-      '310', '', '', '001', '001'
-    ];
+  // 產生符合郵局「託運清單(整段地址)」格式的xlsx
+  // 欄位對應（共30欄）：
+  // A=編號 B=收件人姓名 C=收件人電話 D=寄達地址類型 E=收件地址(整段)
+  // F,G,H=空(合併欄) I=寄件人合約編號 J=寄件人姓名 K=寄件人電話
+  // L=寄件人地址(整段) M,N=空 O=寄件人email
+  // P=內裝物品種類 Q=內裝物品描述 R=總重量 S=包材 T=包裹總長
+  // U=報值金額 V=未送達處理方式 W=內裝物品代碼 X=內裝物 Y=未送達處理方式代碼
+  // Z=郵件寄達地址類型 AA=收件人郵遞區號 AB=寄件人郵遞區號 AC=自備箱袋 AD=郵件種類
+
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function colLetter(n){let s='';while(n>0){s=String.fromCharCode(64+(n%26||26))+s;n=Math.floor((n-1)/26);}return s;}
+  function cell(val,row,col){
+    const addr=colLetter(col)+row;
+    const v=String(val||'');
+    if(!v.trim()) return `<c r="${addr}"/>`;
+    const num=Number(v);
+    if(!isNaN(num)&&v.trim()!=='') return `<c r="${addr}" t="n"><v>${num}</v></c>`;
+    return `<c r="${addr}" t="inlineStr"><is><t>${esc(v)}</t></is></c>`;
+  }
+  function cellStr(val,row,col){
+    const addr=colLetter(col)+row;
+    const v=String(val||'');
+    if(!v.trim()) return `<c r="${addr}"/>`;
+    return `<c r="${addr}" t="inlineStr"><is><t>${esc(v)}</t></is></c>`;
+  }
+
+  // 產生資料列（從第5列開始，對應郵局範本第4列是欄位標題）
+  const dataRows=recs.map((r,i)=>{
+    const rowNum=i+5;
+    const addr=r.shippingAddress||r.address||'';
+    let rr=`<row r="${rowNum}">`;
+    // A=編號（空，系統自動填入）
+    rr+=`<c r="A${rowNum}"/>`;
+    // B=收件人姓名
+    rr+=cellStr(r.name||'',rowNum,2);
+    // C=收件人電話
+    rr+=cellStr(r.phone||'',rowNum,3);
+    // D=寄達地址類型
+    rr+=cellStr('一般地址',rowNum,4);
+    // E=收件地址（整段）
+    rr+=cellStr(addr,rowNum,5);
+    // F,G,H=空
+    // I=寄件人合約編號（空）
+    // J=寄件人姓名
+    rr+=cellStr(senderName,rowNum,10);
+    // K=寄件人電話
+    rr+=cellStr(spFull,rowNum,11);
+    // L=寄件人地址
+    rr+=cellStr(senderAddress,rowNum,12);
+    // O=寄件人email（空）
+    // P=內裝物品種類
+    rr+=cellStr('禮品',rowNum,16);
+    // Q=內裝物品描述（空）
+    // R=總重量
+    rr+=cell('6',rowNum,18);
+    // S=包材
+    rr+=cellStr('51.首次_bag1_一般便利袋:31×23×3(cm)',rowNum,19);
+    // T=包裹總長
+    rr+=cell('57',rowNum,20);
+    // U=報值金額（空）
+    // V=未送達處理方式
+    rr+=cellStr('退回寄件人(另付退回費)',rowNum,22);
+    // W=內裝物品代碼
+    rr+=cellStr('B',rowNum,23);
+    // X=內裝物
+    rr+=cellStr('其他',rowNum,24);
+    // Y=未送達處理方式代碼
+    rr+=cell('1',rowNum,25);
+    // Z=郵件寄達地址類型
+    rr+=cell('310',rowNum,26);
+    // AA=收件人郵遞區號（空）
+    // AB=寄件人郵遞區號（空）
+    // AC=自備箱袋
+    rr+=cellStr('001',rowNum,29);
+    // AD=郵件種類
+    rr+=cellStr('001',rowNum,30);
+    rr+=`</row>`;
+    return rr;
   });
 
-  const q=v=>'"'+(v||'').toString().replace(/"/g,'""')+'"';
-  const csv='\uFEFF'+[hdr,...rows].map(r=>r.map(q).join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='郵局批次寄件_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.csv';
-  a.click();
+  const sheetXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<sheetData>${dataRows.join('')}</sheetData>
+</worksheet>`;
+
+  // 最簡單的xlsx結構（單工作表，名稱符合郵局要求的「託運清單(整段地址)」）
+  const sheetName='託運清單(整段地址)';
+  const files={
+    '[Content_Types].xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`,
+    '_rels/.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+    'xl/workbook.xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${sheetName}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+    'xl/_rels/workbook.xml.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
+    'xl/worksheets/sheet1.xml':sheetXml
+  };
+  _buildZip(files,'郵局批次寄件_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.xlsx');
 
   closeSenderModal();
   showToast('✦ 郵局格式已匯出（'+recs.length+'筆），請至 post.gov.tw 上傳');
@@ -1658,7 +1732,7 @@ function _doExport(recs){
   }
 }
 
-function _buildZip(files){
+function _buildZip(files, filename){
   try {
   function strToBytes(str){return new TextEncoder().encode(str);}
   function crc32(b){
@@ -1687,7 +1761,7 @@ function _buildZip(files){
   const blob=new Blob([zip],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='天聖宮報名_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.xlsx';
+  a.download=filename||('天聖宮報名_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.xlsx');
   a.click();
   showToast('✦ Excel 已匯出（含顏色）');
   } catch(err2) {
