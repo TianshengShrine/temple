@@ -365,6 +365,7 @@ textarea{resize:vertical;min-height:60px}
     </div>
     <div class="form-grid">
       <div class="field"><label>編號</label><input type="text" id="edit-id" style="font-weight:700;color:var(--crimson)"></div>
+      <div class="field"><label>家庭編號</label><input type="text" id="edit-familyNo" placeholder="例：F001"></div>
       <div class="field"><label>姓名</label><input type="text" id="edit-name"></div>
       <div class="field"><label>性別</label>
         <div class="radio-group" style="margin-top:4px">
@@ -2457,6 +2458,7 @@ function editRec(id){
 
   document.getElementById('edit-rec-id').textContent=id;
   document.getElementById('edit-id').value=r.id||'';
+  document.getElementById('edit-familyNo').value=r.familyNo||'';
   document.getElementById('edit-name').value=r.name||'';
   document.getElementById('edit-zodiac').value=r.zodiac||'';
   document.getElementById('edit-age').value=r.age||'';
@@ -2519,6 +2521,7 @@ function saveEditRec(){
   const bhour=document.getElementById('edit-bhour').value;
 
   recs[idx].id=document.getElementById('edit-id').value.trim()||oldId;
+  recs[idx].familyNo=document.getElementById('edit-familyNo').value.trim();
   recs[idx].name=document.getElementById('edit-name').value.trim();
   recs[idx].gender=document.querySelector('input[name=edit-gender]:checked')?.value||'';
   recs[idx].zodiac=document.getElementById('edit-zodiac').value;
