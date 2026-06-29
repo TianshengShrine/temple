@@ -193,7 +193,7 @@ textarea{resize:vertical;min-height:60px}
       </div>
     </div>
     <div id="sync-status" style="font-size:12px;color:var(--smoke);margin-bottom:8px;min-height:18px;letter-spacing:.5px"></div>
-    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;position:sticky;top:0;z-index:100;background:var(--parchment);padding:10px 0 10px 0;border-bottom:1px solid var(--parchment-dark)">
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50;background:var(--parchment);padding:10px 0 10px 0;border-bottom:1px solid var(--parchment-dark)">
       <input type="text" id="rec-q" placeholder="搜尋姓名…" style="flex:1;min-width:120px" oninput="renderRecords()">
       <select id="rec-staff-select" onchange="renderRecords()" style="border:1px solid var(--parchment-dark);border-radius:4px;padding:8px 10px;font-size:13px;min-width:130px"><option value="">全部服務人員</option></select>
       <input type="text" id="rec-family-q" placeholder="搜尋家庭編號…" style="width:130px" oninput="renderRecords()">
@@ -2667,7 +2667,7 @@ function showToast(msg){
 init();
 </script>
   <!-- 全域操作選單（固定定位，不受表格影響）-->
-  <div id="global-rec-menu" style="display:none;position:fixed;background:var(--white);border:1px solid var(--parchment-dark);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99999;min-width:90px;overflow:hidden">
+  <div id="global-rec-menu" style="display:none;position:fixed;background:var(--white);border:1px solid var(--parchment-dark);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:999999;min-width:90px;overflow:hidden">
     <button id="global-menu-edit" style="display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;border-bottom:1px solid var(--parchment);cursor:pointer;font-size:13px;color:var(--gold)">✏️ 編輯</button>
     <button id="global-menu-del" style="display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;cursor:pointer;font-size:13px;color:#e55">🗑 刪除</button>
   </div>
