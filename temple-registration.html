@@ -212,6 +212,7 @@ textarea{resize:vertical;min-height:60px}
       <table class="records-table">
         <thead><tr>
           <th><input type="checkbox" onchange="toggleAllRec(this)" style="accent-color:var(--gold)"></th>
+          <th style="position:sticky;left:30px;background:var(--red-deep);z-index:2;min-width:50px">操作</th>
           <th style="min-width:50px">編號</th>
           <th style="min-width:70px">家庭編號</th>
           <th style="min-width:60px">寄送</th>
@@ -224,7 +225,7 @@ textarea{resize:vertical;min-height:60px}
           <th>金額</th>
           <th>服務人員</th>
           <th>時間</th>
-          <th>操作</th>
+          
         </tr></thead>
         <tbody id="rec-body"></tbody>
       </table>
@@ -1262,6 +1263,13 @@ function renderRecords(){
     const delColor={'自取':'#888','超商':'#E67E22','郵局':'#FFA000'}[r.delivery||'自取']||'#888';
     return `<tr id="recrow-${r.id}">
     <td><input type="checkbox" class="rec-chk" data-id="${r.id}" style="accent-color:var(--crimson);width:14px;height:14px" onchange="updateUploadBtn()"></td>
+    <td style="position:sticky;left:30px;background:var(--parchment);text-align:center;z-index:1">
+      <button onclick="toggleRecMenu('${r.id}',event)" style="background:none;border:1px solid var(--parchment-dark);border-radius:4px;padding:4px 8px;cursor:pointer;font-size:13px;color:var(--smoke)">⋯</button>
+      <div id="rec-menu-${r.id}" style="display:none;position:fixed;background:var(--white);border:1px solid var(--parchment-dark);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:9999;min-width:80px;overflow:hidden">
+        <button onclick="editRec('${r.id}');closeRecMenus()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--gold);border-bottom:1px solid var(--parchment)">✏️ 編輯</button>
+        <button onclick="delRec('${r.id}');closeRecMenus()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:#999">🗑 刪除</button>
+      </div>
+    </td>
     <td><strong style="color:var(--crimson);font-size:13px;letter-spacing:1px">${r.id}</strong></td>
     <td><span class="badge badge-gold">${r.familyNo||'-'}</span></td>
     <td>
@@ -1311,13 +1319,26 @@ function renderRecords(){
         }catch(e){return r.createdAt||'';}
       })()
     }</td>
-    <td style="display:flex;gap:4px">
-    <button onclick="editRec('${r.id}')" style="background:none;border:1px solid var(--gold);border-radius:3px;padding:3px 7px;cursor:pointer;font-size:11px;color:var(--gold)">編輯</button>
-    <button onclick="delRec('${r.id}')" style="background:none;border:1px solid #ddd;border-radius:3px;padding:3px 7px;cursor:pointer;font-size:11px;color:#999">刪除</button>
-  </td>
+
   </tr>`;
   }).join('');
 }
+
+function toggleRecMenu(id,e){
+  e.stopPropagation();
+  closeRecMenus();
+  const menu=document.getElementById('rec-menu-'+id);
+  if(!menu) return;
+  const btn=e.currentTarget;
+  const rect=btn.getBoundingClientRect();
+  menu.style.display='block';
+  menu.style.top=(rect.bottom+window.scrollY)+'px';
+  menu.style.left=(rect.left+window.scrollX)+'px';
+}
+function closeRecMenus(){
+  document.querySelectorAll('[id^="rec-menu-"]').forEach(m=>m.style.display='none');
+}
+document.addEventListener('click',closeRecMenus);
 
 function delRec(id){
   const recs=getRecords();
