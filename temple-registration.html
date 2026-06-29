@@ -193,7 +193,7 @@ textarea{resize:vertical;min-height:60px}
       </div>
     </div>
     <div id="sync-status" style="font-size:12px;color:var(--smoke);margin-bottom:8px;min-height:18px;letter-spacing:.5px"></div>
-    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;position:sticky;top:0;z-index:100;background:var(--parchment);padding:10px 0 10px 0;border-bottom:1px solid var(--parchment-dark)">
       <input type="text" id="rec-q" placeholder="搜尋姓名…" style="flex:1;min-width:120px" oninput="renderRecords()">
       <select id="rec-staff-select" onchange="renderRecords()" style="border:1px solid var(--parchment-dark);border-radius:4px;padding:8px 10px;font-size:13px;min-width:130px"><option value="">全部服務人員</option></select>
       <input type="text" id="rec-family-q" placeholder="搜尋家庭編號…" style="width:130px" oninput="renderRecords()">
@@ -206,6 +206,7 @@ textarea{resize:vertical;min-height:60px}
       <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 匯出 Excel</button>
       <button class="btn btn-outline btn-sm" style="border-color:#FFA000;color:#FFA000" onclick="exportPostOffice()">📦 匯出郵局格式</button>
       <button class="btn btn-sm" style="background:rgba(26,74,139,.1);border:1px solid var(--blue);color:var(--blue);border-radius:4px;cursor:pointer;padding:6px 14px;font-size:12px;letter-spacing:1px" onclick="mergeSelected()">🔗 合併選取為同一戶</button>
+      <button class="btn btn-sm" style="background:rgba(180,0,0,.08);border:1px solid #c00;color:#c00;border-radius:4px;cursor:pointer;padding:6px 14px;font-size:12px" onclick="deleteSelected()">🗑 刪除勾選</button>
       <button class="btn btn-sm" style="background:transparent;border:1px solid #ccc;color:#888;border-radius:4px;cursor:pointer" onclick="clearAllRec()">🗑️ 清除全部</button>
     </div>
     <div style="overflow-x:auto">
@@ -1265,10 +1266,6 @@ function renderRecords(){
     <td><input type="checkbox" class="rec-chk" data-id="${r.id}" style="accent-color:var(--crimson);width:14px;height:14px" onchange="updateUploadBtn()"></td>
     <td style="position:sticky;left:30px;background:var(--parchment);text-align:center;z-index:1">
       <button onclick="toggleRecMenu('${r.id}',event)" style="background:none;border:1px solid var(--parchment-dark);border-radius:4px;padding:4px 8px;cursor:pointer;font-size:13px;color:var(--smoke)">⋯</button>
-      <div id="rec-menu-${r.id}" style="display:none;position:fixed;background:var(--white);border:1px solid var(--parchment-dark);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:9999;min-width:80px;overflow:hidden">
-        <button onclick="editRec('${r.id}');closeRecMenus()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--gold);border-bottom:1px solid var(--parchment)">✏️ 編輯</button>
-        <button onclick="delRec('${r.id}');closeRecMenus()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:#999">🗑 刪除</button>
-      </div>
     </td>
     <td><strong style="color:var(--crimson);font-size:13px;letter-spacing:1px">${r.id}</strong></td>
     <td><span class="badge badge-gold">${r.familyNo||'-'}</span></td>
@@ -1326,19 +1323,49 @@ function renderRecords(){
 
 function toggleRecMenu(id,e){
   e.stopPropagation();
-  closeRecMenus();
-  const menu=document.getElementById('rec-menu-'+id);
+  const menu=document.getElementById('global-rec-menu');
   if(!menu) return;
+  // 如果同一筆再按一次就關閉
+  if(menu.dataset.currentId===id && menu.style.display==='block'){
+    menu.style.display='none';
+    menu.dataset.currentId='';
+    return;
+  }
+  menu.dataset.currentId=id;
+  document.getElementById('global-menu-edit').onclick=function(){editRec(id);menu.style.display='none';};
+  document.getElementById('global-menu-del').onclick=function(){delRec(id);menu.style.display='none';};
   const btn=e.currentTarget;
   const rect=btn.getBoundingClientRect();
   menu.style.display='block';
-  menu.style.top=(rect.bottom+window.scrollY)+'px';
-  menu.style.left=(rect.left+window.scrollX)+'px';
+  // 確保不超出視窗右側
+  const menuW=100;
+  const left=Math.min(rect.left,window.innerWidth-menuW-8);
+  menu.style.top=(rect.bottom+4)+'px';
+  menu.style.left=left+'px';
 }
 function closeRecMenus(){
-  document.querySelectorAll('[id^="rec-menu-"]').forEach(m=>m.style.display='none');
+  const menu=document.getElementById('global-rec-menu');
+  if(menu){menu.style.display='none';menu.dataset.currentId='';}
 }
-document.addEventListener('click',closeRecMenus);
+document.addEventListener('click',function(e){
+  const menu=document.getElementById('global-rec-menu');
+  if(menu && !menu.contains(e.target)) closeRecMenus();
+});
+
+function deleteSelected(){
+  const checked=[...document.querySelectorAll('.rec-chk:checked')].map(cb=>cb.dataset.id);
+  if(!checked.length){showToast('⚠ 請先勾選要刪除的紀錄');return}
+  if(!confirm(`確定要刪除勾選的 ${checked.length} 筆紀錄嗎？此操作無法復原。`)) return;
+  let recs=getRecords().filter(r=>!checked.includes(r.id));
+  saveRecords(recs);
+  // 同步雲端（逐筆刪除）
+  checked.forEach(id=>{
+    const payload=JSON.stringify({action:'delete',id});
+    fetch(GAS_URL+'?data='+encodeURIComponent(payload),{redirect:'follow'}).catch(()=>{});
+  });
+  renderRecords();
+  showToast(`✦ 已刪除 ${checked.length} 筆紀錄`);
+}
 
 function delRec(id){
   const recs=getRecords();
@@ -2631,5 +2658,10 @@ function showToast(msg){
 
 init();
 </script>
+  <!-- 全域操作選單（固定定位，不受表格影響）-->
+  <div id="global-rec-menu" style="display:none;position:fixed;background:var(--white);border:1px solid var(--parchment-dark);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99999;min-width:90px;overflow:hidden">
+    <button id="global-menu-edit" style="display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;border-bottom:1px solid var(--parchment);cursor:pointer;font-size:13px;color:var(--gold)">✏️ 編輯</button>
+    <button id="global-menu-del" style="display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;cursor:pointer;font-size:13px;color:#e55">🗑 刪除</button>
+  </div>
 </body>
 </html>
