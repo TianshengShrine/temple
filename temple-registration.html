@@ -440,7 +440,6 @@ textarea{resize:vertical;min-height:60px}
           <label><input type="radio" name="edit-delivery" value="郵局"><span>📮 郵局</span></label>
         </div>
       </div>
-      <div class="field span2"><label>吉宅住所（戶籍）</label><input type="text" id="edit-address2"></div>
       <div class="field span2">
         <label>郵寄地址</label>
         <select id="edit-shipping-src" style="margin-bottom:6px" onchange="onEditShippingAddrSrc(this.value)">
@@ -513,7 +512,7 @@ textarea{resize:vertical;min-height:60px}
 </div>
 
 <!-- Delete confirmation modal -->
-<div id="del-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;align-items:center;justify-content:center">
+<div id="del-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999999;align-items:center;justify-content:center">
   <div style="background:var(--white);border-radius:8px;padding:28px 24px;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.3)">
     <div style="font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;color:var(--crimson);margin-bottom:10px">確認刪除</div>
     <div id="del-modal-msg" style="font-size:14px;color:var(--ink);margin-bottom:20px;line-height:1.7"></div>
@@ -1332,11 +1331,11 @@ function renderRecords(){
     <td>
       ${r.delivery==='自取' ?
         `<span style="font-size:12px;color:${delColor};font-weight:600">${delIcon} 自取</span>` :
-        `<button onclick="toggleDeliveryInfo('${r.id}')"
+        `<button onclick="toggleDeliveryInfo(${recIdx})"
           style="background:none;border:1px solid ${delColor};border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px;color:${delColor};font-weight:600">
           ${delIcon} ${r.delivery||'自取'} ▾
         </button>
-        <div id="del-info-${r.id}" style="display:none;margin-top:6px;background:var(--parchment);border-radius:4px;padding:8px 10px;font-size:12px;color:var(--ink);white-space:nowrap">
+        <div id="del-info-${recIdx}" style="display:none;margin-top:6px;background:var(--parchment);border-radius:4px;padding:8px 10px;font-size:12px;color:var(--ink);white-space:nowrap">
           ${r.delivery==='郵局' ? `
             <div>📮 <strong>郵寄地址</strong></div>
             <div>${r.shippingAddress||r.address||'（未填）'}</div>
@@ -1352,7 +1351,22 @@ function renderRecords(){
     <td><strong style="position:relative;cursor:default" class="name-cell" data-notes="${r.notes||''}">${r.name}${r.notes?'<span style="display:inline-block;width:6px;height:6px;background:var(--gold);border-radius:50%;vertical-align:top;margin-left:2px"></span>':''}</strong></td>
     <td>${r.gender||''}</td>
     <td>${r.zodiac||''}</td>
-    <td style="font-size:11px;max-width:90px;overflow:hidden;text-overflow:ellipsis">${r.address||''}</td>
+    <td style="font-size:11px;min-width:100px;max-width:160px">
+      ${(()=>{
+        const addrs=(r.addresses&&r.addresses.filter(a=>a))||[r.address||''];
+        const addr1=addrs[0]||r.address||'';
+        const spanStyle='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:default';
+        if(addrs.length<=1) return `<span style="${spanStyle}" title="${addr1}">${addr1}</span>`;
+        return `<div style="display:flex;align-items:center;gap:2px">
+          <span style="${spanStyle}" title="${addr1}">${addr1}</span>
+          <select onchange="this.previousElementSibling.textContent=this.options[this.selectedIndex].dataset.full;this.previousElementSibling.title=this.options[this.selectedIndex].dataset.full;this.selectedIndex=0"
+            style="font-size:10px;width:18px;padding:0;border:1px solid var(--parchment-dark);border-radius:3px;background:var(--parchment);color:var(--smoke);cursor:pointer;flex-shrink:0">
+            <option>▾</option>
+            ${addrs.map((a,i)=>`<option data-full="${a}">地址${i+1}：${a}</option>`).join('')}
+          </select>
+        </div>`;
+      })()}
+    </td>
     <td style="font-size:11px;white-space:nowrap">${r.bazi||''}</td>
     <td><div style="display:flex;flex-wrap:wrap;gap:3px;align-items:flex-start;min-width:180px;max-width:260px">${(()=>{
       // 依照原報名表活動順序排列
@@ -2090,13 +2104,15 @@ function _doExport(recs){
     rr+='</row>';
     rows.push(rr);
 
-    // 地址2以後：另起一列，只填吉宅住所欄，其他空白
+    // 地址2以後：另起一列，填編號、姓名、吉宅住所
     const addrs=r.addresses&&r.addresses.length?r.addresses:[r.address||''];
     addrs.slice(1).forEach(addr=>{
       if(!addr) return;
       const addrRow=excelRow++;
       let ar=`<row r="${addrRow}">`;
-      ar+=cell(addr, 3, addrRow, 7); // 吉宅住所在第7欄
+      ar+=cell(r.id||'', 3, addrRow, 1);           // A 編號
+      ar+=cell(r.name||'', nameStyle, addrRow, 2);  // B 姓名（服務人員顏色）
+      ar+=cell(addr, 3, addrRow, 7);                // G 吉宅住所
       ar+='</row>';
       rows.push(ar);
     });
@@ -2766,7 +2782,6 @@ function editRec(id, _r){
   const delVal=r.delivery||'自取';
   const delEl=document.querySelector(`input[name=edit-delivery][value="${delVal}"]`);
   if(delEl) delEl.checked=true;
-  const addr2=document.getElementById('edit-address2'); if(addr2) addr2.value=r.address||'';
   // 填入郵寄地址選擇
   const addrs=r.addresses&&r.addresses.length?r.addresses:[r.address||''];
   const srcSel=document.getElementById('edit-shipping-src');
@@ -2839,7 +2854,6 @@ function saveEditRec(){
     const qty=parseInt(document.querySelector(`.edit-dou-qty[data-actid="${a.id}"]`)?.textContent)||1;
     return s+a.price*qty;
   },0);
-  recs[idx].address=document.getElementById('edit-address2')?.value||recs[idx].address||'';
   recs[idx].phone=document.getElementById('edit-phone2')?.value||recs[idx].phone||'';
   recs[idx].storeName=document.getElementById('edit-storeName')?.value||'';
   recs[idx].storeAddress=document.getElementById('edit-storeAddress')?.value||'';
@@ -2896,8 +2910,8 @@ function lunarDayStr(d){
   return days[n]||d||'';
 }
 
-function toggleDeliveryInfo(id){
-  const el=document.getElementById('del-info-'+id);
+function toggleDeliveryInfo(idx){
+  const el=document.getElementById('del-info-'+idx);
   if(!el) return;
   el.style.display=el.style.display==='none'?'block':'none';
 }
