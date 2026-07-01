@@ -620,21 +620,30 @@ async function cloudLoad(){
   }
 }
 
+const _savingIds=new Set();
 async function cloudSave(records, action='save'){
   try{
     showSyncStatus('⏳ 儲存至雲端…');
-    // 分批上傳，每次1筆避免URL過長
     let saved=0;
     for(const r of records){
-      const payload=JSON.stringify({action,records:[r]});
-      const url=GAS_URL+'?data='+encodeURIComponent(payload);
-      const res=await fetch(url,{redirect:'follow'});
-      const text=await res.text();
-      let data;
-      try{ data=JSON.parse(text); }
-      catch(pe){ showSyncStatus('⚠ 回應格式錯誤:'+text.slice(0,50)); continue; }
-      if(data.ok) saved++;
-      else showSyncStatus('⚠ 儲存失敗：'+(data.error||'未知錯誤'));
+      // 防止同一筆重複送出
+      if(_savingIds.has(r.id)){
+        saved++; continue;
+      }
+      _savingIds.add(r.id);
+      try{
+        const payload=JSON.stringify({action,records:[r]});
+        const url=GAS_URL+'?data='+encodeURIComponent(payload);
+        const res=await fetch(url,{redirect:'follow'});
+        const text=await res.text();
+        let data;
+        try{ data=JSON.parse(text); }
+        catch(pe){ showSyncStatus('⚠ 回應格式錯誤:'+text.slice(0,50)); continue; }
+        if(data.ok) saved++;
+        else showSyncStatus('⚠ 儲存失敗：'+(data.error||'未知錯誤'));
+      }finally{
+        _savingIds.delete(r.id);
+      }
     }
     showSyncStatus('✅ 已儲存至雲端（'+saved+'/'+records.length+'筆）');
   }catch(e){
@@ -2104,15 +2113,13 @@ function _doExport(recs){
     rr+='</row>';
     rows.push(rr);
 
-    // 地址2以後：另起一列，填編號、姓名、吉宅住所
+    // 地址2以後：另起一列，只填吉宅住所（不存編號姓名，避免被誤讀成獨立信徒）
     const addrs=r.addresses&&r.addresses.length?r.addresses:[r.address||''];
     addrs.slice(1).forEach(addr=>{
       if(!addr) return;
       const addrRow=excelRow++;
       let ar=`<row r="${addrRow}">`;
-      ar+=cell(r.id||'', 3, addrRow, 1);           // A 編號
-      ar+=cell(r.name||'', nameStyle, addrRow, 2);  // B 姓名（服務人員顏色）
-      ar+=cell(addr, 3, addrRow, 7);                // G 吉宅住所
+      ar+=cell(addr, 3, addrRow, 7); // G 吉宅住所
       ar+='</row>';
       rows.push(ar);
     });
