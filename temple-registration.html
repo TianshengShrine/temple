@@ -1080,42 +1080,46 @@ function renderFamilies(){
           </div>
 
           <div class="divider" style="margin:10px 0">生辰八字</div>
-          ${[{label:'原生',prefix:''},{label:'造生',prefix:'2'}].map(({label,prefix})=>`
+          ${(()=>{
+            const hours=['子時(23-01)','夜子時(23-00)','早子時(00-01)','丑時(01-03)','寅時(03-05)','卯時(05-07)','辰時(07-09)','巳時(09-11)','午時(11-13)','未時(13-15)','申時(15-17)','酉時(17-19)','戌時(19-21)','亥時(21-23)'];
+            return [
+              {label:'原生',yr:'byear',mo:'bmonth',dy:'bday',hr:'bhour'},
+              {label:'造生',yr:'byear2',mo:'bmonth2',dy:'bday2',hr:'bhour2'}
+            ].map(({label,yr,mo,dy,hr})=>`
           <div style="background:rgba(201,146,42,.04);border:1px solid var(--parchment-dark);border-radius:6px;padding:10px 12px;margin-bottom:8px">
             <div style="font-size:12px;font-weight:600;color:var(--crimson);margin-bottom:8px">${label}</div>
             <div class="form-grid three">
               <div class="field"><label>農曆出生年（民國）</label>
                 <div style="display:flex;align-items:center;gap:4px">
-                  <input type="number" value="${(m['byear'+prefix]||'').replace(/[^0-9]/g,'')}" placeholder="60" min="1" max="130"
-                    style="width:80px" oninput="updateBeliever('${f.fid}','${m.bid}','byear'+prefix,this.value?this.value+'年':'')">
+                  <input type="number" value="${(m[yr]||'').replace(/[^0-9]/g,'')}" placeholder="60" min="1" max="130"
+                    style="width:80px" oninput="updateBeliever('${f.fid}','${m.bid}','${yr}',this.value?this.value+'年':'')">
                   <span style="font-size:14px;color:var(--smoke)">年</span>
                 </div>
               </div>
               <div class="field"><label>農曆出生月（可填閏月如閏5）</label>
                 <div style="display:flex;align-items:center;gap:4px">
-                  <input type="text" value="${(m['bmonth'+prefix]||'').replace(/月/g,'')}" placeholder="1或閏5"
-                    style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','bmonth'+prefix,this.value?this.value+'月':'')">
+                  <input type="text" value="${(m[mo]||'').replace(/月/g,'')}" placeholder="1或閏5"
+                    style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','${mo}',this.value?this.value+'月':'')">
                   <span style="font-size:14px;color:var(--smoke)">月</span>
                 </div>
               </div>
               <div class="field"><label>農曆出生日</label>
                 <div style="display:flex;align-items:center;gap:4px">
-                  <input type="text" value="${(m['bday'+prefix]||'').replace(/日/g,'')}" placeholder="1"
-                    style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','bday'+prefix,this.value?this.value+'日':'')">
+                  <input type="text" value="${(m[dy]||'').replace(/日/g,'')}" placeholder="1"
+                    style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','${dy}',this.value?this.value+'日':'')">
                   <span style="font-size:14px;color:var(--smoke)">日</span>
                 </div>
               </div>
               <div class="field"><label>出生時辰</label>
-                <select onchange="updateBeliever('${f.fid}','${m.bid}','bhour'+prefix,this.value)">
+                <select onchange="updateBeliever('${f.fid}','${m.bid}','${hr}',this.value)">
                   <option value="">請選擇</option>
-                  ${['子時(23-01)','夜子時(23-00)','早子時(00-01)','丑時(01-03)','寅時(03-05)','卯時(05-07)','辰時(07-09)','巳時(09-11)',
-                     '午時(11-13)','未時(13-15)','申時(15-17)','酉時(17-19)','戌時(19-21)','亥時(21-23)']
-                     .map(h=>`<option ${m['bhour'+prefix]===h?'selected':''}>${h}</option>`).join('')}
+                  ${hours.map(h=>`<option ${m[hr]===h?'selected':''}>${h}</option>`).join('')}
                 </select>
               </div>
             </div>
           </div>
-          `).join('')}
+            `).join('');
+          })()}
 
           <div class="field span2" style="margin-top:6px">
             <label>個人備註</label>
