@@ -131,6 +131,23 @@ textarea{resize:vertical;min-height:60px}
   line-height: 1.5;
   box-shadow: 0 2px 8px rgba(0,0,0,.3);
 }
+/* 固定底部水平捲軸 */
+#fixed-scrollbar-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  z-index: 9000;
+  background: var(--parchment);
+  border-top: 1px solid var(--parchment-dark);
+  display: none;
+}
+#fixed-scrollbar-inner {
+  height: 1px;
+}
 </style>
 </head>
 <body>
@@ -226,7 +243,7 @@ textarea{resize:vertical;min-height:60px}
       <button class="btn btn-sm" style="background:rgba(180,0,0,.08);border:1px solid #c00;color:#c00;border-radius:4px;cursor:pointer;padding:6px 14px;font-size:12px" onclick="deleteSelected()">🗑 刪除勾選</button>
       <button class="btn btn-sm" style="background:transparent;border:1px solid #ccc;color:#888;border-radius:4px;cursor:pointer" onclick="clearAllRec()">🗑️ 清除全部</button>
     </div>
-    <div style="overflow-x:auto">
+    <div id="rec-table-wrap" style="overflow-x:auto;position:relative">
       <table class="records-table">
         <thead><tr>
           <th><input type="checkbox" onchange="toggleAllRec(this)" style="accent-color:var(--gold)"></th>
@@ -3114,5 +3131,70 @@ init();
     <button id="g-menu-edit" style="display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;border-bottom:1px solid #f0e8d8;cursor:pointer;font-size:13px;color:#b8860b">✏️ 編輯</button>
     <button id="g-menu-del" style="display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;cursor:pointer;font-size:13px;color:#e55">🗑 刪除</button>
   </div>
+  <!-- 固定底部水平捲軸 -->
+  <div id="fixed-scrollbar-wrap">
+    <div id="fixed-scrollbar-inner"></div>
+  </div>
+  <script>
+  (function(){
+    const wrap = document.getElementById('fixed-scrollbar-wrap');
+    const inner = document.getElementById('fixed-scrollbar-inner');
+    let tableWrap = null;
+    let syncing = false;
+
+    function updateScrollbar() {
+      tableWrap = document.getElementById('rec-table-wrap');
+      if (!tableWrap) { wrap.style.display='none'; return; }
+      const rect = tableWrap.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!inView || tableWrap.scrollWidth <= tableWrap.clientWidth) {
+        wrap.style.display = 'none'; return;
+      }
+      wrap.style.display = 'block';
+      wrap.style.left = rect.left + 'px';
+      wrap.style.right = (window.innerWidth - rect.right) + 'px';
+      inner.style.width = tableWrap.scrollWidth + 'px';
+    }
+
+    wrap.addEventListener('scroll', function() {
+      if (syncing) return;
+      syncing = true;
+      tableWrap.scrollLeft = wrap.scrollLeft;
+      syncing = false;
+    });
+
+    document.addEventListener('scroll', function() {
+      if (!tableWrap) tableWrap = document.getElementById('rec-table-wrap');
+      if (tableWrap && !syncing) {
+        syncing = true;
+        wrap.scrollLeft = tableWrap.scrollLeft;
+        syncing = false;
+      }
+      updateScrollbar();
+    });
+
+    if (tableWrap) tableWrap.addEventListener('scroll', function() {
+      if (syncing) return;
+      syncing = true;
+      wrap.scrollLeft = tableWrap.scrollLeft;
+      syncing = false;
+    });
+
+    setInterval(function() {
+      tableWrap = document.getElementById('rec-table-wrap');
+      if (tableWrap) {
+        tableWrap.addEventListener('scroll', function() {
+          if (syncing) return;
+          syncing = true;
+          wrap.scrollLeft = tableWrap.scrollLeft;
+          syncing = false;
+        });
+        updateScrollbar();
+      }
+    }, 1000);
+
+    window.addEventListener('resize', updateScrollbar);
+  })();
+  </script>
 </body>
 </html>
