@@ -480,12 +480,7 @@ textarea{resize:vertical;min-height:60px}
       <div class="field"><label>聯絡電話</label><input type="text" id="edit-phone2"></div>
       <div class="field"><label>超商門市名稱</label><input type="text" id="edit-storeName"></div>
       <div class="field span2"><label>超商門市地址</label><input type="text" id="edit-storeAddress"></div>
-      <div class="field"><label>生辰類型</label>
-        <div class="radio-group" style="margin-top:3px">
-          <label><input type="radio" name="edit-baziType" value="原生"><span>原生</span></label>
-          <label><input type="radio" name="edit-baziType" value="造生"><span>造生</span></label>
-        </div>
-      </div>
+
       <div class="field"><label>個人備註</label><input type="text" id="edit-memberNotes" placeholder="個人備註（選填）"></div>
       <div class="field span2"><label>整批備註</label><textarea id="edit-notes" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--parchment-dark);border-radius:4px;font-size:13px;resize:vertical" placeholder="備註說明（選填）"></textarea></div>
     </div>
@@ -1606,16 +1601,22 @@ document.addEventListener('click',function(e){
 });
 
 // 編輯modal地址輔助函數
-function _renderEditAddr(idx, val){
+function _renderEditAddr(idx, val, addrFor){
   const con=document.getElementById('edit-addresses-container');
   if(!con) return;
   const row=document.createElement('div');
-  row.style.cssText='display:flex;gap:6px;align-items:center';
+  row.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px';
   row.dataset.addrIdx=idx;
+  const forVal=addrFor||'都要';
   row.innerHTML=`
     <span style="font-size:11px;color:var(--smoke);min-width:40px">地址${idx+1}</span>
     <input class="edit-addr-input" type="text" value="${val||''}" placeholder="縣市/鄉鎮區/路街/門牌號"
-      style="flex:1;padding:6px 8px;border:1px solid var(--parchment-dark);border-radius:4px;font-size:13px">
+      style="flex:1;min-width:160px;padding:6px 8px;border:1px solid var(--parchment-dark);border-radius:4px;font-size:13px">
+    <select class="edit-addr-for" style="font-size:11px;padding:2px 4px;border:1px solid var(--parchment-dark);border-radius:3px">
+      <option value="都要" ${forVal==='都要'?'selected':''}>原生&造生</option>
+      <option value="原生" ${forVal==='原生'?'selected':''}>僅原生</option>
+      <option value="造生" ${forVal==='造生'?'selected':''}>僅造生</option>
+    </select>
     ${idx>0?`<button type="button" onclick="removeEditAddress(this)" style="background:none;border:none;cursor:pointer;color:#e55;font-size:16px;padding:0 4px">×</button>`:''}
   `;
   con.appendChild(row);
@@ -2898,9 +2899,10 @@ function editRec(id, _r){
   document.getElementById('edit-age').value=r.age||'';
   // 填入多地址
   const editAddrs=r.addresses&&r.addresses.length?r.addresses:[r.address||''];
+  const editAddrFor=r.addrFor||[];
   const addrCon=document.getElementById('edit-addresses-container');
   addrCon.innerHTML='';
-  editAddrs.forEach((a,i)=>_renderEditAddr(i,a));
+  editAddrs.forEach((a,i)=>_renderEditAddr(i,a,editAddrFor[i]));
   document.getElementById('edit-byear').value=(r.byear||'').replace(/[^0-9]/g,'');
   document.getElementById('edit-bmonth').value=(r.bmonth||'').replace(/月/g,'');
   document.getElementById('edit-bday').value=(r.bday||'').replace(/日/g,'');
@@ -2987,9 +2989,12 @@ function saveEditRec(){
   recs[idx].gender=document.querySelector('input[name=edit-gender]:checked')?.value||'';
   recs[idx].zodiac=document.getElementById('edit-zodiac').value;
   recs[idx].age=document.getElementById('edit-age').value;
-  const addrInputs=[...document.querySelectorAll('.edit-addr-input')].map(i=>i.value.trim()).filter((_,i)=>i===0||_.length>0);
+  const addrRows=[...document.getElementById('edit-addresses-container').children];
+  const addrInputs=addrRows.map(r=>r.querySelector('.edit-addr-input')?.value.trim()||'').filter((_,i)=>i===0||_.length>0);
+  const addrForVals=addrRows.map(r=>r.querySelector('.edit-addr-for')?.value||'都要').filter((_,i)=>i===0||addrInputs[i]?.length>0);
   recs[idx].addresses=addrInputs.length?addrInputs:[''];
   recs[idx].address=addrInputs[0]||'';
+  recs[idx].addrFor=addrForVals;
   recs[idx].byear=byear?byear+'年':'';
   recs[idx].bmonth=bmonth?(bmonth.endsWith('月')?bmonth:bmonth+'月'):'';
   recs[idx].bday=bday?(bday.endsWith('日')?bday:bday+'日'):'';
