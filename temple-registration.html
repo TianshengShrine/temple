@@ -402,31 +402,59 @@ textarea{resize:vertical;min-height:60px}
       </div>
       <div class="field"><label>年齡</label><input type="text" id="edit-age"></div>
       <div class="field span2"><label>吉宅住所</label><div id="edit-addresses-container" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addEditAddress()" style="font-size:12px;color:var(--gold);background:none;border:1px dashed var(--gold);border-radius:4px;padding:3px 10px;cursor:pointer;margin-top:4px">＋ 新增地址</button></div>
-      <div class="field"><label>出生年（民國）</label>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="edit-byear" placeholder="60" min="1" max="130" style="width:80px">
-          <span style="font-size:14px;color:var(--smoke)">年</span>
+      <!-- 原生八字 -->
+      <div class="field span2" style="background:rgba(201,146,42,.04);border:1px solid var(--parchment-dark);border-radius:6px;padding:10px 12px">
+        <div style="font-size:12px;font-weight:600;color:var(--crimson);margin-bottom:8px">原生</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <div class="field"><label>出生年（民國）</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="edit-byear" placeholder="60" min="1" max="130" style="width:80px">
+              <span style="font-size:14px;color:var(--smoke)">年</span>
+            </div>
+          </div>
+          <div class="field"><label>出生月（可填閏月）</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="text" id="edit-bmonth" placeholder="1或閏5" style="width:70px">
+              <span style="font-size:14px;color:var(--smoke)">月</span>
+            </div>
+          </div>
+          <div class="field"><label>出生日</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="text" id="edit-bday" placeholder="1" style="width:60px">
+              <span style="font-size:14px;color:var(--smoke)">日</span>
+            </div>
+          </div>
+          <div class="field"><label>出生時辰</label>
+            <select id="edit-bhour"><option value="">請選擇</option><option>子時(23-01)</option><option>夜子時(23-00)</option><option>早子時(00-01)</option><option>丑時(01-03)</option><option>寅時(03-05)</option><option>卯時(05-07)</option><option>辰時(07-09)</option><option>巳時(09-11)</option><option>午時(11-13)</option><option>未時(13-15)</option><option>申時(15-17)</option><option>酉時(17-19)</option><option>戌時(19-21)</option><option>亥時(21-23)</option></select>
+          </div>
         </div>
       </div>
-      <div class="field"><label>出生月</label>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="edit-bmonth" placeholder="1" min="1" max="12" style="width:70px">
-          <span style="font-size:14px;color:var(--smoke)">月</span>
+      <!-- 造生八字 -->
+      <div class="field span2" style="background:rgba(201,146,42,.04);border:1px solid var(--parchment-dark);border-radius:6px;padding:10px 12px">
+        <div style="font-size:12px;font-weight:600;color:var(--crimson);margin-bottom:8px">造生</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <div class="field"><label>出生年（民國）</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="edit-byear2" placeholder="60" min="1" max="130" style="width:80px">
+              <span style="font-size:14px;color:var(--smoke)">年</span>
+            </div>
+          </div>
+          <div class="field"><label>出生月（可填閏月）</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="text" id="edit-bmonth2" placeholder="1或閏5" style="width:70px">
+              <span style="font-size:14px;color:var(--smoke)">月</span>
+            </div>
+          </div>
+          <div class="field"><label>出生日</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="text" id="edit-bday2" placeholder="1" style="width:60px">
+              <span style="font-size:14px;color:var(--smoke)">日</span>
+            </div>
+          </div>
+          <div class="field"><label>出生時辰</label>
+            <select id="edit-bhour2"><option value="">請選擇</option><option>子時(23-01)</option><option>夜子時(23-00)</option><option>早子時(00-01)</option><option>丑時(01-03)</option><option>寅時(03-05)</option><option>卯時(05-07)</option><option>辰時(07-09)</option><option>巳時(09-11)</option><option>午時(11-13)</option><option>未時(13-15)</option><option>申時(15-17)</option><option>酉時(17-19)</option><option>戌時(19-21)</option><option>亥時(21-23)</option></select>
+          </div>
         </div>
-      </div>
-      <div class="field"><label>出生日</label>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="edit-bday" placeholder="1" min="1" max="30" style="width:70px">
-          <span style="font-size:14px;color:var(--smoke)">日</span>
-        </div>
-      </div>
-      <div class="field"><label>出生時辰</label>
-        <select id="edit-bhour">
-          <option value="">請選擇</option>
-          <option>子時</option><option>夜子時(23-00)</option><option>早子時(00-01)</option><option>丑時</option><option>寅時</option><option>卯時</option>
-          <option>辰時</option><option>巳時</option><option>午時</option><option>未時</option>
-          <option>申時</option><option>酉時</option><option>戌時</option><option>亥時</option>
-        </select>
       </div>
       <div class="field"><label>服務人員</label>
         <select id="edit-staff">
@@ -452,7 +480,14 @@ textarea{resize:vertical;min-height:60px}
       <div class="field"><label>聯絡電話</label><input type="text" id="edit-phone2"></div>
       <div class="field"><label>超商門市名稱</label><input type="text" id="edit-storeName"></div>
       <div class="field span2"><label>超商門市地址</label><input type="text" id="edit-storeAddress"></div>
-      <div class="field span2"><label>備註</label><textarea id="edit-notes" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--parchment-dark);border-radius:4px;font-size:13px;resize:vertical" placeholder="備註說明（選填）"></textarea></div>
+      <div class="field"><label>生辰類型</label>
+        <div class="radio-group" style="margin-top:3px">
+          <label><input type="radio" name="edit-baziType" value="原生"><span>原生</span></label>
+          <label><input type="radio" name="edit-baziType" value="造生"><span>造生</span></label>
+        </div>
+      </div>
+      <div class="field"><label>個人備註</label><input type="text" id="edit-memberNotes" placeholder="個人備註（選填）"></div>
+      <div class="field span2"><label>整批備註</label><textarea id="edit-notes" style="width:100%;min-height:60px;padding:8px;border:1px solid var(--parchment-dark);border-radius:4px;font-size:13px;resize:vertical" placeholder="備註說明（選填）"></textarea></div>
     </div>
     <div id="edit-rec-id" style="display:none"></div>
     <div style="margin-top:16px">
@@ -564,12 +599,13 @@ function getRecords(){
       )){
         r.shippingAddress=''; dirty=true;
       }
-      // 修復3：douInfo 條目沒有斗數格式 → 補上 x1斗
+      // 修復3：douInfo 沒有斗數格式補上 x1斗
       if(Array.isArray(r.douInfo)){
         const fixed=r.douInfo.map(a=>{
-          if(/x\d+斗$/.test(String(a))) return a;
+          const s=String(a);
+          if(/x\d+斗/.test(s)) return s;
           dirty=true;
-          return a+' x1斗';
+          return s+' x1斗';
         });
         r.douInfo=fixed;
       }
@@ -890,7 +926,7 @@ function addBeliever(fid){
   if(!f) return;
   const bid='b'+(++belCount);
   f.members.push({bid,bno:'',name:'',gender:'',zodiac:'',age:'',address:'',addresses:[''],phone:'',delivery:'自取',storeBrand:'',storeName:'',storeAddress:'',shippingAddress:'',
-    byear:'',bmonth:'',bday:'',bhour:'',cal:'農曆',actIds:[],douMap:{}});
+    byear:'',bmonth:'',bday:'',bhour:'',byear2:'',bmonth2:'',bday2:'',bhour2:'',cal:'農曆',actIds:[],douMap:{},memberNotes:'',shipTarget:'原生',addrFor:[]});
   renderFamilies();
 }
 
@@ -910,14 +946,15 @@ function updateBeliever(fid,bid,field,value){
   if(m) m[field]=value;
 }
 
-function changeDou(fid,bid,aid,delta){
+function changeDou(fid,bid,aid,key,delta){
   const f=families.find(x=>x.fid===fid);
   if(!f) return;
   const m=f.members.find(x=>x.bid===bid);
   if(!m) return;
   if(!m.douMap) m.douMap={};
-  const cur=(m.douMap[aid]||1)+delta;
-  m.douMap[aid]=Math.max(1,cur);
+  if(!m.douMap[aid]) m.douMap[aid]={ori:0,made:0};
+  const cur=(m.douMap[aid][key]||0)+delta;
+  m.douMap[aid][key]=Math.max(0,cur);
   renderFamilies();
 }
 
@@ -929,7 +966,7 @@ function toggleAct(fid,bid,aid,checked){
   if(checked){
     if(!m.actIds.includes(aid)) m.actIds.push(aid);
     if(!m.douMap) m.douMap={};
-    if(!m.douMap[aid]) m.douMap[aid]=1;
+    if(!m.douMap[aid]) m.douMap[aid]={ori:1,made:0};
   } else {
     m.actIds=m.actIds.filter(x=>x!==aid);
     if(m.douMap) delete m.douMap[aid];
@@ -942,7 +979,7 @@ function renderFamilies(){
   // 確保所有已勾選活動的 douMap 都存在（防止 douMap 未初始化）
   families.forEach(f=>f.members.forEach(m=>{
     if(!m.douMap) m.douMap={};
-    m.actIds.forEach(aid=>{ if(!m.douMap[aid]) m.douMap[aid]=1; });
+    m.actIds.forEach(aid=>{ if(!m.douMap[aid]||typeof m.douMap[aid]!=='object') m.douMap[aid]={ori:1,made:0}; });
   }));
   const fixedCols=7; // 固定欄位數：編號、姓名、性別、生肖、庚年、生辰八字、住所
   const container=document.getElementById('families-container');
@@ -1018,14 +1055,22 @@ function renderFamilies(){
             <div class="field span2">
               <label>吉宅住所</label>
               <div id="addr-list-${f.fid}-${m.bid}">
-                ${(m.addresses||[m.address||'']).map((addr,ai)=>`
-                <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+                ${(m.addresses||[m.address||'']).map((addr,ai)=>{
+                  const addrFor=(m.addrFor||[])[ai]||'都要';
+                  return `
+                <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:wrap">
                   <span style="font-size:11px;color:var(--smoke);min-width:40px">地址${ai+1}</span>
                   <input type="text" value="${addr}" placeholder="縣市/鄉鎮區/路街/門牌號"
-                    style="flex:1" oninput="updateAddress('${f.fid}','${m.bid}',${ai},this.value)">
+                    style="flex:1;min-width:160px" oninput="updateAddress('${f.fid}','${m.bid}',${ai},this.value)">
+                  <select style="font-size:11px;padding:2px 4px;border:1px solid var(--parchment-dark);border-radius:3px"
+                    onchange="updateAddrFor('${f.fid}','${m.bid}',${ai},this.value)">
+                    <option value="都要" ${addrFor==='都要'?'selected':''}>原生&造生</option>
+                    <option value="原生" ${addrFor==='原生'?'selected':''}>僅原生</option>
+                    <option value="造生" ${addrFor==='造生'?'selected':''}>僅造生</option>
+                  </select>
                   ${ai>0?`<button type="button" onclick="removeAddress('${f.fid}','${m.bid}',${ai})"
                     style="background:none;border:none;cursor:pointer;color:#e55;font-size:16px;padding:0 4px">×</button>`:''}
-                </div>`).join('')}
+                </div>`;}).join('')}
               </div>
               <button type="button" onclick="addAddress('${f.fid}','${m.bid}')"
                 style="font-size:12px;color:var(--gold);background:none;border:1px dashed var(--gold);border-radius:4px;padding:3px 10px;cursor:pointer;margin-top:2px">
@@ -1035,36 +1080,47 @@ function renderFamilies(){
           </div>
 
           <div class="divider" style="margin:10px 0">生辰八字</div>
-          <div class="form-grid three">
-            <div class="field"><label>農曆出生年（民國）</label>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="number" id="byear-${m.bid}" value="${(m.byear||'').replace(/[^0-9]/g,'')}" placeholder="60" min="1" max="130"
-                  style="width:80px" oninput="updateBeliever('${f.fid}','${m.bid}','byear',this.value?this.value+'年':'')">
-                <span style="font-size:14px;color:var(--smoke)">年</span>
+          ${[{label:'原生',prefix:''},{label:'造生',prefix:'2'}].map(({label,prefix})=>`
+          <div style="background:rgba(201,146,42,.04);border:1px solid var(--parchment-dark);border-radius:6px;padding:10px 12px;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:600;color:var(--crimson);margin-bottom:8px">${label}</div>
+            <div class="form-grid three">
+              <div class="field"><label>農曆出生年（民國）</label>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="number" value="${(m['byear'+prefix]||'').replace(/[^0-9]/g,'')}" placeholder="60" min="1" max="130"
+                    style="width:80px" oninput="updateBeliever('${f.fid}','${m.bid}','byear'+prefix,this.value?this.value+'年':'')">
+                  <span style="font-size:14px;color:var(--smoke)">年</span>
+                </div>
+              </div>
+              <div class="field"><label>農曆出生月（可填閏月如閏5）</label>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="text" value="${(m['bmonth'+prefix]||'').replace(/月/g,'')}" placeholder="1或閏5"
+                    style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','bmonth'+prefix,this.value?this.value+'月':'')">
+                  <span style="font-size:14px;color:var(--smoke)">月</span>
+                </div>
+              </div>
+              <div class="field"><label>農曆出生日</label>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="text" value="${(m['bday'+prefix]||'').replace(/日/g,'')}" placeholder="1"
+                    style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','bday'+prefix,this.value?this.value+'日':'')">
+                  <span style="font-size:14px;color:var(--smoke)">日</span>
+                </div>
+              </div>
+              <div class="field"><label>出生時辰</label>
+                <select onchange="updateBeliever('${f.fid}','${m.bid}','bhour'+prefix,this.value)">
+                  <option value="">請選擇</option>
+                  ${['子時(23-01)','夜子時(23-00)','早子時(00-01)','丑時(01-03)','寅時(03-05)','卯時(05-07)','辰時(07-09)','巳時(09-11)',
+                     '午時(11-13)','未時(13-15)','申時(15-17)','酉時(17-19)','戌時(19-21)','亥時(21-23)']
+                     .map(h=>`<option ${m['bhour'+prefix]===h?'selected':''}>${h}</option>`).join('')}
+                </select>
               </div>
             </div>
-            <div class="field"><label>農曆出生月</label>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="number" id="bmonth-${m.bid}" value="${(m.bmonth||'').replace(/[^0-9]/g,'')}" placeholder="1" min="1" max="12"
-                  style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','bmonth',this.value?this.value+'月':'')">
-                <span style="font-size:14px;color:var(--smoke)">月</span>
-              </div>
-            </div>
-            <div class="field"><label>農曆出生日</label>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="number" id="bday-${m.bid}" value="${(m.bday||'').replace(/[^0-9]/g,'')}" placeholder="1" min="1" max="30"
-                  style="width:70px" oninput="updateBeliever('${f.fid}','${m.bid}','bday',this.value?this.value+'日':'')">
-                <span style="font-size:14px;color:var(--smoke)">日</span>
-              </div>
-            </div>
-            <div class="field"><label>出生時辰</label>
-              <select id="bhour-${m.bid}" onchange="updateBeliever('${f.fid}','${m.bid}','bhour',this.value)">
-                <option value="">請選擇</option>
-                ${['子時(23-01)','夜子時(23-00)','早子時(00-01)','丑時(01-03)','寅時(03-05)','卯時(05-07)','辰時(07-09)','巳時(09-11)',
-                   '午時(11-13)','未時(13-15)','申時(15-17)','酉時(17-19)','戌時(19-21)','亥時(21-23)']
-                   .map(h=>`<option ${m.bhour===h?'selected':''}>${h}</option>`).join('')}
-              </select>
-            </div>
+          </div>
+          `).join('')}
+
+          <div class="field span2" style="margin-top:6px">
+            <label>個人備註</label>
+            <input type="text" value="${m.memberNotes||''}" placeholder="個人備註（選填）"
+              oninput="updateBeliever('${f.fid}','${m.bid}','memberNotes',this.value)">
           </div>
 
           <div class="divider" style="margin:10px 0">禮品寄送</div>
@@ -1082,6 +1138,14 @@ function renderFamilies(){
             ${m.delivery==='郵局' ? `
             <div class="field span2" style="background:rgba(201,146,42,.06);border:1px solid var(--gold);border-radius:6px;padding:10px 14px">
               <label style="color:var(--crimson);font-weight:600">📮 郵寄地址</label>
+              <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                <label style="font-size:13px"><input type="radio" name="shipTarget-${m.bid}" value="原生" ${(!m.shipTarget||m.shipTarget==='原生')?'checked':''}
+                  onchange="updateBeliever('${f.fid}','${m.bid}','shipTarget','原生')"> 原生</label>
+                <label style="font-size:13px"><input type="radio" name="shipTarget-${m.bid}" value="造生" ${m.shipTarget==='造生'?'checked':''}
+                  onchange="updateBeliever('${f.fid}','${m.bid}','shipTarget','造生')"> 造生</label>
+                <label style="font-size:13px"><input type="radio" name="shipTarget-${m.bid}" value="都要" ${m.shipTarget==='都要'?'checked':''}
+                  onchange="updateBeliever('${f.fid}','${m.bid}','shipTarget','都要')"> 都要（兩筆都寄）</label>
+              </div>
               <select style="margin-bottom:6px" onchange="onShippingAddrSrc('${f.fid}','${m.bid}',this.value)">
                 ${(()=>{
                   const addrs=m.addresses&&m.addresses.length?m.addresses:[m.address||''];
@@ -1134,12 +1198,18 @@ function renderFamilies(){
                     <td style="font-size:11px;color:var(--smoke);white-space:nowrap;min-width:110px">${a.date}</td>
                     <td style="font-weight:500;min-width:80px">
                       ${a.name}
-                      ${chk ? `<div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                        <span style="font-size:12px;color:var(--smoke)">斗數：</span>
-                        <button onclick="changeDou('${f.fid}','${m.bid}','${a.id}',-1)" style="width:28px;height:28px;border:1px solid var(--parchment-dark);border-radius:4px;background:var(--parchment);cursor:pointer;font-size:16px;line-height:1;color:var(--crimson)">－</button>
-                        <span style="font-size:16px;font-weight:700;color:var(--crimson);min-width:24px;text-align:center">${(m.douMap||{})[a.id]||1}</span>
-                        <button onclick="changeDou('${f.fid}','${m.bid}','${a.id}',1)" style="width:28px;height:28px;border:1px solid var(--parchment-dark);border-radius:4px;background:var(--parchment);cursor:pointer;font-size:16px;line-height:1;color:var(--crimson)">＋</button>
-                        <span style="font-size:12px;color:var(--smoke)">斗　小計：<strong style="color:var(--crimson)">$${((m.douMap||{})[a.id]||1)*a.price}</strong></span>
+                      ${chk ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+                        ${[{label:'原生',key:'ori'},{label:'造生',key:'made'}].map(({label,key})=>{
+                          const qty=((m.douMap||{})[a.id]||{})[key]||0;
+                          return `<div style="display:flex;align-items:center;gap:6px">
+                            <span style="font-size:11px;color:var(--smoke);min-width:28px">${label}</span>
+                            <button onclick="changeDou('${f.fid}','${m.bid}','${a.id}','${key}',-1)" style="width:24px;height:24px;border:1px solid var(--parchment-dark);border-radius:4px;background:var(--parchment);cursor:pointer;font-size:14px;line-height:1;color:var(--crimson)">－</button>
+                            <span style="font-size:15px;font-weight:700;color:var(--crimson);min-width:20px;text-align:center">${qty}</span>
+                            <button onclick="changeDou('${f.fid}','${m.bid}','${a.id}','${key}',1)" style="width:24px;height:24px;border:1px solid var(--parchment-dark);border-radius:4px;background:var(--parchment);cursor:pointer;font-size:14px;line-height:1;color:var(--crimson)">＋</button>
+                            <span style="font-size:11px;color:var(--smoke)">斗</span>
+                          </div>`;
+                        }).join('')}
+                        <span style="font-size:11px;color:var(--smoke)">小計：<strong style="color:var(--crimson)">$${(((m.douMap||{})[a.id]||{ori:0,made:0}).ori+((m.douMap||{})[a.id]||{ori:0,made:0}).made)*a.price}</strong></span>
                       </div>` : ''}
                     </td>
                     <td style="font-size:12px;color:var(--smoke);white-space:nowrap">${a.content||''}</td>
@@ -1228,47 +1298,91 @@ function submitAll(){
       if(!m.name.trim()) return; // skip empty
       const id=m.bno&&m.bno.trim() ? m.bno.trim() : (batchId+'-'+String(fi+1)+String(f.members.indexOf(m)+1).padStart(2,'0'));
       const actNames=m.actIds.map(aid=>{const a=acts.find(x=>x.id===aid);return a?a.name:'';}).filter(Boolean);
-      // 斗數資訊
-      const douInfo=actNames.map(an=>{
-        const act=acts.find(x=>x.name===an);
-        if(!act) return an;
-        const qty=(m.douMap||{})[act.id]||1;
-        return `${an} x${qty}斗`;
-      });
-      const total=m.actIds.reduce((s,aid)=>{
-        const a=acts.find(x=>x.id===aid);
-        const qty=(m.douMap||{})[aid]||1;
-        return s+(a?a.price*qty:0);
-      },0);
-      batchTotal+=total;
-      recs.push({
-        id, familyNo, batchId,
-        staffName,
+      // 根據 addrFor 分配地址給原生/造生
+      const allAddrs=m.addresses&&m.addresses.length?m.addresses:[m.address||''];
+      const addrFor=m.addrFor||[];
+      const oriAddrs=allAddrs.filter((_,i)=>!addrFor[i]||addrFor[i]==='都要'||addrFor[i]==='原生');
+      const madeAddrs=allAddrs.filter((_,i)=>!addrFor[i]||addrFor[i]==='都要'||addrFor[i]==='造生');
+
+      const getShippingAddr=(addrs)=>{
+        if(!m.shippingAddrSrc||m.shippingAddrSrc==='custom') return m.shippingAddress||'';
+        const idx=parseInt((m.shippingAddrSrc||'addr0').replace('addr',''))||0;
+        return addrs[idx]||addrs[0]||'';
+      };
+
+      const baseRec={
+        familyNo, batchId, staffName,
         name:m.name, gender:m.gender, zodiac:m.zodiac, age:m.age,
-        address:m.address,
         phone:m.phone||'',
         delivery:m.delivery||'自取',
         storeBrand:m.storeBrand||'',
         storeName:m.storeName||'',
         storeAddress:m.storeAddress||'',
-        addresses:m.addresses||[m.address||''],
-        address:(m.addresses&&m.addresses[0])||m.address||'',
         shippingAddrSrc:m.shippingAddrSrc||'addr0',
-        shippingAddress:(()=>{
-          if(!m.shippingAddrSrc||m.shippingAddrSrc==='custom') return m.shippingAddress||'';
-          const addrs=m.addresses&&m.addresses.length?m.addresses:[m.address||''];
-          const idx=parseInt((m.shippingAddrSrc||'addr0').replace('addr',''))||0;
-          return addrs[idx]||m.address||'';
-        })(),
-        bazi:`${rocToGanzhi(m.byear)}${lunarMonthStr(m.bmonth)}${lunarDayStr(m.bday)}日${(m.bhour||'').split('(')[0].trim()}`,
-        byear:m.byear||'', bmonth:m.bmonth||'', bday:m.bday||'', bhour:(m.bhour||'').split('(')[0].trim(),
+        memberNotes:m.memberNotes||'',
         cal:m.cal,
         activities:actNames,
-        douInfo,
-        total,
         notes:document.getElementById('f-notes').value,
         createdAt:now
-      });
+      };
+
+      const hasOri=m.byear||m.bmonth||m.bday;
+      const hasMade=m.byear2||m.bmonth2||m.bday2;
+
+      // 原生筆
+      if(hasOri||(!hasOri&&!hasMade)){
+        const oriDouInfo=actNames.map(an=>{
+          const act=acts.find(x=>x.name===an);
+          if(!act) return an+' x1斗';
+          const dmap=(m.douMap||{})[act.id]||{ori:1,made:0};
+          const ori=typeof dmap==='object'?(dmap.ori||0):1;
+          return `${an} x${ori}斗`;
+        });
+        const oriTotal=m.actIds.reduce((s,aid)=>{
+          const a=acts.find(x=>x.id===aid);
+          const dmap=(m.douMap||{})[aid]||{ori:1,made:0};
+          const ori=typeof dmap==='object'?(dmap.ori||0):1;
+          return s+(a?a.price*ori:0);
+        },0);
+        const oriSuffix=hasMade?'-原生':'';
+        batchTotal+=oriTotal;
+        recs.push(Object.assign({},baseRec,{
+          id:id+oriSuffix,
+          address:oriAddrs[0]||m.address||'',
+          addresses:oriAddrs.length?oriAddrs:[m.address||''],
+          shippingAddress:getShippingAddr(oriAddrs),
+          bazi:hasOri?rocToGanzhi(m.byear)+lunarMonthStr(m.bmonth)+lunarDayStr(m.bday)+'日'+(m.bhour||'').split('(')[0].trim():'',
+          byear:m.byear||'', bmonth:m.bmonth||'', bday:m.bday||'', bhour:(m.bhour||'').split('(')[0].trim(),
+          douInfo:oriDouInfo, total:oriTotal
+        }));
+      }
+
+      // 造生筆
+      if(hasMade){
+        const madeDouInfo=actNames.map(an=>{
+          const act=acts.find(x=>x.name===an);
+          if(!act) return an+' x1斗';
+          const dmap=(m.douMap||{})[act.id]||{ori:1,made:0};
+          const made=typeof dmap==='object'?(dmap.made||0):0;
+          return `${an} x${made}斗`;
+        });
+        const madeTotal=m.actIds.reduce((s,aid)=>{
+          const a=acts.find(x=>x.id===aid);
+          const dmap=(m.douMap||{})[aid]||{ori:0,made:0};
+          const made=typeof dmap==='object'?(dmap.made||0):0;
+          return s+(a?a.price*made:0);
+        },0);
+        batchTotal+=madeTotal;
+        recs.push(Object.assign({},baseRec,{
+          id:id+'-造生',
+          address:madeAddrs[0]||m.address||'',
+          addresses:madeAddrs.length?madeAddrs:[m.address||''],
+          shippingAddress:getShippingAddr(madeAddrs),
+          bazi:rocToGanzhi(m.byear2)+lunarMonthStr(m.bmonth2)+lunarDayStr(m.bday2)+'日'+(m.bhour2||'').split('(')[0].trim(),
+          byear:m.byear2||'', bmonth:m.bmonth2||'', bday:m.bday2||'', bhour:(m.bhour2||'').split('(')[0].trim(),
+          douInfo:madeDouInfo, total:madeTotal
+        }));
+      }
     });
   });
 
@@ -1361,7 +1475,7 @@ function renderRecords(){
         </div>`
       }
     </td>
-    <td><strong style="position:relative;cursor:default" class="name-cell" data-notes="${r.notes||''}">${r.name}${r.notes?'<span style="display:inline-block;width:6px;height:6px;background:var(--gold);border-radius:50%;vertical-align:top;margin-left:2px"></span>':''}</strong></td>
+    <td><strong style="position:relative;cursor:default" class="name-cell" data-notes="${(r.memberNotes||r.notes||'')}">${r.name}${(r.memberNotes||r.notes)?'<span style="display:inline-block;width:6px;height:6px;background:var(--gold);border-radius:50%;vertical-align:top;margin-left:2px"></span>':''}</strong></td>
     <td>${r.gender||''}</td>
     <td>${r.zodiac||''}</td>
     <td style="font-size:11px;min-width:100px;max-width:160px">
@@ -1402,6 +1516,9 @@ function renderRecords(){
       return sorted.map(a=>{
         const match=a.match(/^(.+?) x(\d+)斗$/);
         if(match) return `<span class="badge badge-red">${match[1]}<strong style="color:var(--crimson);margin-left:2px">x${match[2]}斗</strong></span>`;
+        // 舊格式「原生x1斗」相容
+        const oldFmt=a.match(/^(.+?)\s+(?:原生|造生)x(\d+)斗$/);
+        if(oldFmt) return `<span class="badge badge-red">${oldFmt[1]}<strong style="color:var(--crimson);margin-left:2px">x${oldFmt[2]}斗</strong></span>`;
         return `<span class="badge badge-red">${a}<strong style="color:var(--crimson);margin-left:2px">x1斗</strong></span>`;
       }).join('');
     })()}</div></td>
@@ -1545,6 +1662,15 @@ function onShippingAddrSrc(fid,bid,val){
     m.shippingAddress='';
   }
   renderFamilies();
+}
+
+function updateAddrFor(fid,bid,idx,val){
+  const f=families.find(x=>x.fid===fid);
+  if(!f) return;
+  const m=f.members.find(x=>x.bid===bid);
+  if(!m) return;
+  if(!m.addrFor) m.addrFor=[];
+  m.addrFor[idx]=val;
 }
 
 function addAddress(fid,bid){
@@ -2101,8 +2227,15 @@ function _doExport(recs){
     acts.forEach((a,i)=>{
       const idx=(r.activities||[]).indexOf(a.name);
       if(idx===-1){rr+=cell(0,3,rowNum,fixedCols+1+i);return;}
-      const d=((r.douInfo||[])[idx]||'').match(/x([0-9]+)斗/);
-      const qty=d?parseInt(d[1]):1;
+      const di=(r.douInfo||[])[idx]||'';
+      // 新格式：原生x1斗 造生x2斗
+      const oriM=di.match(/原生x(\d+)斗/);
+      const madeM=di.match(/造生x(\d+)斗/);
+      // 舊格式相容
+      const oldM=di.match(/x(\d+)斗/);
+      const qty=oriM||madeM
+        ?(parseInt(oriM?oriM[1]:0)+parseInt(madeM?madeM[1]:0))
+        :(oldM?parseInt(oldM[1]):1);
       recTotal+=a.price*qty;
       rr+=cell(qty, 3, rowNum, fixedCols+1+i);
     });
@@ -2765,8 +2898,12 @@ function editRec(id, _r){
   addrCon.innerHTML='';
   editAddrs.forEach((a,i)=>_renderEditAddr(i,a));
   document.getElementById('edit-byear').value=(r.byear||'').replace(/[^0-9]/g,'');
-  document.getElementById('edit-bmonth').value=(r.bmonth||'').replace(/[^0-9]/g,'');
-  document.getElementById('edit-bday').value=(r.bday||'').replace(/[^0-9]/g,'');
+  document.getElementById('edit-bmonth').value=(r.bmonth||'').replace(/月/g,'');
+  document.getElementById('edit-bday').value=(r.bday||'').replace(/日/g,'');
+  const eb2=document.getElementById('edit-byear2'); if(eb2) eb2.value=(r.byear2||'').replace(/[^0-9]/g,'');
+  const em2=document.getElementById('edit-bmonth2'); if(em2) em2.value=(r.bmonth2||'').replace(/月/g,'');
+  const ed2=document.getElementById('edit-bday2'); if(ed2) ed2.value=(r.bday2||'').replace(/日/g,'');
+  const eh2=document.getElementById('edit-bhour2'); if(eh2) eh2.value=r.bhour2||'';
   // Set bhour - try stored bhour first, else parse from bazi
   const hourVal=r.bhour||( hourM?hourM[1]:'' );
   const bhourSel=document.getElementById('edit-bhour');
@@ -2812,6 +2949,10 @@ function editRec(id, _r){
     }
   }
   const notesEl=document.getElementById('edit-notes'); if(notesEl) notesEl.value=r.notes||'';
+  const memberNotesEl=document.getElementById('edit-memberNotes'); if(memberNotesEl) memberNotesEl.value=r.memberNotes||'';
+  const baziTypeVal=r.baziType||'原生';
+  const baziTypeEl=document.querySelector(`input[name="edit-baziType"][value="${baziTypeVal}"]`);
+  if(baziTypeEl) baziTypeEl.checked=true;
   const ph2=document.getElementById('edit-phone2'); if(ph2) ph2.value=r.phone||'';
   const sn=document.getElementById('edit-storeName'); if(sn) sn.value=r.storeName||'';
   const sa=document.getElementById('edit-storeAddress'); if(sa) sa.value=r.storeAddress||'';
@@ -2845,7 +2986,21 @@ function saveEditRec(){
   const addrInputs=[...document.querySelectorAll('.edit-addr-input')].map(i=>i.value.trim()).filter((_,i)=>i===0||_.length>0);
   recs[idx].addresses=addrInputs.length?addrInputs:[''];
   recs[idx].address=addrInputs[0]||'';
-  recs[idx].bazi=`${rocToGanzhi(byear)}${lunarMonthStr(bmonth)}${lunarDayStr(bday)}日${(bhour||'').split('(')[0].trim()}`;
+  recs[idx].byear=byear?byear+'年':'';
+  recs[idx].bmonth=bmonth?(bmonth.endsWith('月')?bmonth:bmonth+'月'):'';
+  recs[idx].bday=bday?(bday.endsWith('日')?bday:bday+'日'):'';
+  recs[idx].bhour=(bhour||'').split('(')[0].trim();
+  const byear2=document.getElementById('edit-byear2')?.value.trim()||'';
+  const bmonth2=document.getElementById('edit-bmonth2')?.value.trim()||'';
+  const bday2=document.getElementById('edit-bday2')?.value.trim()||'';
+  const bhour2=document.getElementById('edit-bhour2')?.value||'';
+  recs[idx].byear2=byear2?byear2+'年':'';
+  recs[idx].bmonth2=bmonth2?(bmonth2.endsWith('月')?bmonth2:bmonth2+'月'):'';
+  recs[idx].bday2=bday2?(bday2.endsWith('日')?bday2:bday2+'日'):'';
+  recs[idx].bhour2=(bhour2||'').split('(')[0].trim();
+  const baziOri=byear?`${rocToGanzhi(byear)}${lunarMonthStr(bmonth)}${lunarDayStr(bday)}日${(bhour||'').split('(')[0].trim()}(原生)`:'';
+  const baziMade=byear2?`${rocToGanzhi(byear2)}${lunarMonthStr(bmonth2)}${lunarDayStr(bday2)}日${(bhour2||'').split('(')[0].trim()}(造生)`:'';
+  recs[idx].bazi=[baziOri,baziMade].filter(Boolean).join(' ');
   recs[idx].staffName=document.getElementById('edit-staff').value;
   recs[idx].delivery=document.querySelector('input[name=edit-delivery]:checked')?.value||'自取';
   // Save activities and douInfo from edit modal
@@ -2880,6 +3035,9 @@ function saveEditRec(){
     recs[idx].shippingAddress=editAddrsArr[addrIdx]||recs[idx].address||'';
   }
   recs[idx].notes=document.getElementById('edit-notes')?.value.trim()||'';
+  recs[idx].memberNotes=document.getElementById('edit-memberNotes')?.value.trim()||'';
+  const baziTypeSel=document.querySelector('input[name="edit-baziType"]:checked');
+  recs[idx].baziType=baziTypeSel?baziTypeSel.value:'原生';
 
   saveRecords(recs);
   closeEditModal();
@@ -2910,7 +3068,13 @@ function rocToGanzhi(rocYear){
 // 農曆月份中文
 function lunarMonthStr(m){
   const months=['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
-  const n=parseInt(String(m).replace(/[^0-9]/g,''));
+  const s=String(m||'').replace(/月/g,'').trim();
+  // 閏月處理：如「閏5」→「閏五月」
+  if(s.startsWith('閏')){
+    const n=parseInt(s.replace(/[^0-9]/g,''));
+    return '閏'+(months[n]||s.slice(1)+'月');
+  }
+  const n=parseInt(s.replace(/[^0-9]/g,''));
   return months[n]||m||'';
 }
 
